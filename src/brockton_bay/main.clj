@@ -5,11 +5,12 @@
 
 (defrecord World [people])
 
-(defrecord Person [id
-                   name
-                   ^long damage ^long resistance ^long toughness
-                   faction
-                   location])
+(defrecord Person
+  [id
+   name
+   ^long damage ^long resistance ^long toughness
+   faction
+   location])
 
 (defn people->world [people]
   (->World
@@ -23,15 +24,18 @@
   )
 
 (defn random-name [name-components]
+  {:pre [(not-empty name-components)]}
   (str
     (string/capitalize (rand-nth name-components))
     (rand-nth name-components)
-    " "
-    (string/capitalize (rand-nth name-components))
-    (rand-nth name-components)
+    ;" "
+    ;(string/capitalize (rand-nth name-components))
+    ;(rand-nth name-components)
     ))
 
 (defn random-person [name-components factions locations]
+  {:pre [(not-empty factions)
+         (not-empty locations)]}
   (->Person
     (java.util.UUID/randomUUID)
     (random-name name-components)
@@ -67,58 +71,93 @@
 ;(defn different-keys [template source & keys]
 ;  (reduce (partial different-key template) source keys)
 
-(defn inflict [^long damage target-id world]                ;TODO shouldn't deal negative damage
-  (let [inflicted (- damage (get-in world [:people target-id :resistance]))
-        target (get-in world [:people target-id])]
+(defn inflict [damage world id]
+  {:pre [(integer? damage)
+         (instance? World world)
+         (not-empty (get-in world [:people id]))]}
+  (let [inflicted (max 0 (- damage (get-in world [:people id :resistance])))
+        target (get-in world [:people id])
+        outcome (update-in world [:people id :toughness] - inflicted)]
     (println (str (:name target) " took " inflicted " damage."))
-    (update-in
-      world
-      [:people target-id :toughness]
-      - inflicted
-      )
+    outcome
     ))
 
-(defn attack-local-enemy [id world]
+(defn attack-local-enemy [world id]
+  {:pre [(instance? World world)
+         (not-empty (get-in world [:people id]))]}
   (let [attacker (get-in world [:people id])]
     (as->
       (same-keys attacker (world->people world) :location) $
       (different-keys attacker $ :faction)
-      (rand-nth $)
-      (do (println $) $)
-      (:id $)
-      (inflict (:damage attacker) $ world)
-      )))
+      (if (empty? $)
+        world
+        (as->
+          (rand-nth $) $2
+          ;(do
+          ;  (println (str (:name attacker) " attacks " (:name $) "."))
+          ;  $)
+          (:id $2)
+          (inflict (:damage attacker) world $2)
+          )))))
 
 (defn clean-dead [world]
-  (->
-    (world->people world)
-    (filter #(> (:toughness %) 0))
-    (people->world))
-  )
+  {:pre [(instance? World world)]}
+  (let [outcome
+        (as->
+          (world->people world) $
+          (filter #(> (:toughness %) 0) $)
+          (people->world $)
+          )]
+    (print "Deaths: ")
+    (println (map :name (first
+                          (data/diff
+                            (set (world->people world))
+                            (set (world->people outcome))))))
+    outcome
+    ))
 
-(defn teleport [id destination world]
+(defn teleport [destination world id]
+  {:pre [(not-empty destination)
+         (instance? World world)
+         (not-empty (get-in world [:people id]))]}
   (do
     (println (str
                (get-in world [:people id :name])
                " teleported to "
                destination "."))
-    (assoc
-      (get-in world [:people id])
-      :location
-      destination
-      )
-    ))
-
-(defn teleport-if-bored [id world]
-
+    (assoc-in world [:people id :location] destination)
+    )
+  ;(assoc-in world [:people id :location] destination)
   )
 
-(defn on-tick [world]
+(defn teleport-if-bored [world id]
+  {:pre [(instance? World world)
+         (not-empty (get-in world [:people id]))]}
+  (let [person (get-in world [:people id])]
+    (as->
+      (same-keys person (world->people world) :location) $
+      (different-keys person $ :faction)
+      (count $)
+      (if (= $ 0)
+        (as->
+          (different-keys person (world->people world) :faction) $2
+          (if (empty? $2)
+            world                                           ;This person has no enemies left anywhere in the world.
+            (as-> (rand-nth $2) $3
+                  (:location $3)
+                  (teleport $3 world id))))
+        world                                               ;This person has enemies left at its current location.
+        ))))
+
+(defn on-tick
+  "Each person attacks a random enemy in the same location (if any).
+  Once their location is clear, they teleport to another location."
+  [world]
+  {:pre [(instance? World world)]}
   (as->
-    (reduce world attack-local-enemy (world->ids world)) $
+    (reduce attack-local-enemy world (world->ids world)) $
     (clean-dead $)
-    (reduce $ teleport-if-bored)
-    (people->world $)
+    (reduce teleport-if-bored $ (world->ids $))
     ))
 
 
@@ -149,7 +188,9 @@
     sample-name-components
     sample-factions
     sample-locations
-    20))
+    50))
 
 (def stuff (sample-world))
 (def dude (rand-nth (world->people stuff)))
+(defn affect-dude [thing-to-do] (clojure.pprint/pprint (get-in thing-to-do [:people (:id dude)])))
+(defn ticks [x] (take x (iterate on-tick stuff)))
