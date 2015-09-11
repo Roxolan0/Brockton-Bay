@@ -1,27 +1,29 @@
-(ns roxolan.brockton-bay.main
+(ns brockton-bay.main
   (:require [clojure.string :as string])
   (:require [clojure.data :as data])
+  (:require [clojure.stacktrace :as stacktrace])
+  (:import (java.util UUID))
   )
 
-(defrecord World [people])
+(defrecord World [locations
+                  people])
 
 (defrecord Person
   [id
    name
-   ^long damage ^long resistance ^long toughness
+   ^long speed ^long damage ^long armour ^long hp
    faction
    location])
 
-(defn people->world [people]
-  (->World
-    (zipmap (map :id people) people)))
+;(defn people->world [people]
+;  (->World
+;    (zipmap (map :id people) people)))
 
 (defn world->people [world]
   (map val (:people world)))
 
 (defn world->ids [world]
-  (map :id (world->people world))
-  )
+  (map :id (world->people world)))
 
 (defn random-name [name-components]
   {:pre [(not-empty name-components)]}
@@ -33,36 +35,46 @@
     ;(rand-nth name-components)
     ))
 
+(defn rand-in-range
+  "Generates a random int between min-incl and max-incl (both included)."
+  [min-incl, max-incl]
+  {:pre [(integer? min-incl)
+         (integer? max-incl)
+         (<= min-incl max-incl)]}
+  (+ min-incl (rand-int (- (+ 1 max-incl) min-incl))))
+
 (defn random-person [name-components factions locations]
   {:pre [(not-empty factions)
          (not-empty locations)]}
   (->Person
-    (java.util.UUID/randomUUID)
-    (random-name name-components)
-    (rand-int 11)
-    (rand-int 7)
-    (rand-int 21)
-    (rand-nth factions)
-    (rand-nth locations)
+    (UUID/randomUUID)                                       ;id
+    (random-name name-components)                           ;name
+    (rand-in-range 0 10)                                    ;speed
+    (rand-in-range 1 5)                                     ;damage
+    (rand-in-range 0 3)                                     ;armour
+    (rand-in-range 1 10)                                    ;hp
+    (rand-nth factions)                                     ;faction
+    (rand-nth locations)                                    ;location
     ))
 
 (defn random-world
   [name-components factions locations nb-people]
-  (people->world
-    (repeatedly nb-people
-                (partial random-person name-components factions locations))
-    ))
+  (let [people
+        (repeatedly
+          nb-people
+          (partial random-person name-components factions locations))]
+    (->World
+      locations
+      (zipmap (map :id people) people))))
 
 (defn by-key [key source]
   (group-by (keyword key) source))
 
 (defn same-keys [template source & keys]
-  (filter #(= (select-keys template keys) (select-keys % keys)) source)
-  )
+  (filter #(= (select-keys template keys) (select-keys % keys)) source))
 
 (defn different-keys [template source & keys]
-  (filter #(= (count (nth (data/diff (select-keys template keys) (select-keys % keys)) 2)) 0) source)
-  )
+  (filter #(= (count (nth (data/diff (select-keys template keys) (select-keys % keys)) 2)) 0) source))
 
 ;(defn different-key [template source key]
 ;  (filter #(not= (select-keys template [key]) (select-keys % [key])) source)
@@ -75,12 +87,11 @@
   {:pre [(integer? damage)
          (instance? World world)
          (not-empty (get-in world [:people id]))]}
-  (let [inflicted (max 0 (- damage (get-in world [:people id :resistance])))
+  (let [inflicted (max 1 (- damage (get-in world [:people id :armour])))
         target (get-in world [:people id])
-        outcome (update-in world [:people id :toughness] - inflicted)]
+        outcome (update-in world [:people id :hp] - inflicted)]
     (println (str (:name target) " took " inflicted " damage."))
-    outcome
-    ))
+    outcome))
 
 (defn attack-local-enemy [world id]
   {:pre [(instance? World world)
@@ -95,29 +106,39 @@
           (rand-nth $) $2
           (do
             (println (str "*"
-                       (:location attacker)
-                       ": "
-                       (:name attacker)
-                       " ("
-                       (:faction attacker)
-                       ") attacks "
-                       (:name $2)
-                       " ("
-                       (:faction $2)
-                       ")."))
+                          (:location attacker)
+                          ": "
+                          (:name attacker)
+                          " ("
+                          (:faction attacker)
+                          ") attacks "
+                          (:name $2)
+                          " ("
+                          (:faction $2)
+                          ")."))
             $2)
           (:id $2)
           (inflict (:damage attacker) world $2)
           )))))
 
+(defn dissoc-in
+  "Dissociates an entry from a nested associative structure returning a new
+  nested structure. keys is a sequence of keys. Any empty maps that result
+  will not be present in the new structure."
+  [m [k & ks :as keys]]
+  (if ks
+    (if-let [nextmap (get m k)]
+      (let [newmap (dissoc-in nextmap ks)]
+        (if (seq newmap)
+          (assoc m k newmap)
+          (dissoc m k)))
+      m)
+    (dissoc m k)))
+
 (defn clean-dead [world]
-  {:pre [(instance? World world)]}
-  (let [outcome
-        (as->
-          (world->people world) $
-          (filter #(> (:toughness %) 0) $)
-          (people->world $)
-          )]
+  ;{:pre [(instance? World world)]}
+  (let [corpse-ids (map :id (filter #(<= (:hp %) 0) (vals (get-in world [:people]))))
+        outcome (reduce (fn [x y] (dissoc-in x [:people y])) world corpse-ids)]
     (print "*** Deaths: ")
     (println (map :name (first
                           (data/diff
@@ -200,7 +221,9 @@
     sample-locations
     20))
 
+;test stuff
 (def stuff (sample-world))
 (def dude (rand-nth (world->people stuff)))
 (defn affect-dude [thing-to-do] (clojure.pprint/pprint (get-in thing-to-do [:people (:id dude)])))
 (defn ticks [x] (take x (iterate on-tick stuff)))
+;(stacktrace/print-stack-trace *e 5)
