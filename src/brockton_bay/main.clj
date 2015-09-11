@@ -93,9 +93,19 @@
         world
         (as->
           (rand-nth $) $2
-          ;(do
-          ;  (println (str (:name attacker) " attacks " (:name $) "."))
-          ;  $)
+          (do
+            (println (str "*"
+                       (:location attacker)
+                       ": "
+                       (:name attacker)
+                       " ("
+                       (:faction attacker)
+                       ") attacks "
+                       (:name $2)
+                       " ("
+                       (:faction $2)
+                       ")."))
+            $2)
           (:id $2)
           (inflict (:damage attacker) world $2)
           )))))
@@ -108,7 +118,7 @@
           (filter #(> (:toughness %) 0) $)
           (people->world $)
           )]
-    (print "Deaths: ")
+    (print "*** Deaths: ")
     (println (map :name (first
                           (data/diff
                             (set (world->people world))
@@ -165,7 +175,7 @@
 (def sample-name-components
   ["angel" "demon" "beast" "monster"
    "fire" "ice"
-   "arrow" "knife"
+   "arrow" "knife" "rainbow"
    "eye" "muscle" "skull" "bone" "blood"
    "death" "power"
    "dark" "light"
@@ -175,7 +185,7 @@
 
 (def sample-factions ["red" "blue"])
 
-(def sample-locations ["graveyard" "volcano" "space" "fortress"])
+(def sample-locations ["Graveyard" "Volcano" "Space" "Fortress"])
 
 (defn sample-person []
   (random-person
@@ -188,7 +198,7 @@
     sample-name-components
     sample-factions
     sample-locations
-    50))
+    20))
 
 (def stuff (sample-world))
 (def dude (rand-nth (world->people stuff)))
