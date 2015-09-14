@@ -1,12 +1,22 @@
 (ns brockton-bay.main
   (:require [clojure.string :as string]
             [clojure.data :as data]
-            [clojure.stacktrace :as stacktrace])
+            [clojure.stacktrace :as stacktrace]
+            [clojure.test :as test])
   (:import (java.util UUID))
+  (:use brockton-bay.library)
   )
 
-(defrecord World [locations
-                  people])
+(defrecord World
+  [players
+   locations
+   people])
+
+(defrecord Player
+  [id
+   ^boolean is-human
+   faction
+   cash])
 
 (defrecord Person
   [id
@@ -19,6 +29,24 @@
 ;  (->World
 ;    (zipmap (map :id people) people)))
 
+(defn empty-world [locations]
+  (->World []
+           locations
+           [])
+  )
+
+(defn add-player [world is-human faction]
+  {:pre [(instance? World world)
+         (instance? Boolean is-human)
+         (seq faction)]}
+  (let [player
+        (->Player
+          (UUID/randomUUID)
+          is-human
+          faction
+          0)]
+    (update-in world [:players] conj player)))
+
 (defn world->people [world]
   (map val (:people world)))
 
@@ -26,7 +54,7 @@
   (map :id (world->people world)))
 
 (defn random-name [name-components]
-  {:pre [(not-empty name-components)]}
+  {:pre [(seq name-components)]}
   (str
     (string/capitalize (rand-nth name-components))
     (rand-nth name-components)
@@ -44,8 +72,8 @@
   (+ min-incl (rand-int (- (+ 1 max-incl) min-incl))))
 
 (defn random-person [name-components factions locations]
-  {:pre [(not-empty factions)
-         (not-empty locations)]}
+  {:pre [(seq factions)
+         (seq locations)]}
   (->Person
     (UUID/randomUUID)                                       ;id
     (random-name name-components)                           ;name
@@ -64,6 +92,7 @@
           nb-people
           (partial random-person name-components factions locations))]
     (->World
+      []
       locations
       (zipmap (map :id people) people))))
 
@@ -86,7 +115,7 @@
 (defn inflict [damage world id]
   {:pre [(integer? damage)
          (instance? World world)
-         (not-empty (get-in world [:people id]))]}
+         (seq (get-in world [:people id]))]}
   (let [inflicted (max 1 (- damage (get-in world [:people id :armour])))
         target (get-in world [:people id])
         outcome (update-in world [:people id :hp] - inflicted)]
@@ -95,7 +124,7 @@
 
 (defn attack-local-enemy [world id]
   {:pre [(instance? World world)
-         (not-empty (get-in world [:people id]))]}
+         (seq (get-in world [:people id]))]}
   (let [attacker (get-in world [:people id])]
     (as->
       (same-keys attacker (world->people world) :location) $
@@ -148,9 +177,9 @@
     ))
 
 (defn teleport [destination world id]
-  {:pre [(not-empty destination)
+  {:pre [(seq destination)
          (instance? World world)
-         (not-empty (get-in world [:people id]))]}
+         (seq (get-in world [:people id]))]}
   (do
     (println (str
                (get-in world [:people id :name])
@@ -163,7 +192,7 @@
 
 (defn teleport-if-bored [world id]
   {:pre [(instance? World world)
-         (not-empty (get-in world [:people id]))]}
+         (seq (get-in world [:people id]))]}
   (let [person (get-in world [:people id])]
     (as->
       (same-keys person (world->people world) :location) $
@@ -206,19 +235,17 @@
 
 (def sample-factions ["red" "blue"])
 
-(def sample-locations ["Graveyard" "Volcano" "Space" "Fortress"])
-
 (defn sample-person []
   (random-person
     sample-name-components
     sample-factions
-    sample-locations))
+    default-locations))
 
 (defn sample-world []
   (random-world
     sample-name-components
     sample-factions
-    sample-locations
+    default-locations
     20))
 
 ;test stuff
