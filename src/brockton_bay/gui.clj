@@ -1,12 +1,16 @@
 (ns brockton-bay.gui
-  (require [clojure.test :as test])
-  (:use [seesaw.core])
-  (:use brockton-bay.main)
-  (:use brockton-bay.library))
+  (require [clojure.test :as test]
+           [seesaw.core :refer :all]
+           [brockton-bay.main :as main]
+           [brockton-bay.library :as lib]))
+
+;;; English strings.
 
 (def game-title "Brockton Bay")
 
-;(defrecord Option [message effect])
+;;; Flexible GUI functions.
+
+(defn frame? [x] (instance? javax.swing.JFrame x))
 
 (defn display [frame content]
   (config! frame :content content)
@@ -15,49 +19,36 @@
 
 (defn ask
   ([frame message]
-   {:pre [(instance? javax.swing.JFrame frame)]}
+   {:pre [(frame? frame)]}
    (input frame message))
   ([frame message options]
-   {:pre [(instance? javax.swing.JFrame frame)
+   {:pre [(frame? frame)
           (seq options)]}                                    ;false if options is nil or empty
    (input frame message :choices options))
   )
 
+;;; Game-specific GUI functions
+
 (defn ask-new-player [world frame player-number]
-  {:pre [(instance? javax.swing.JFrame frame)]}
+  {:pre [(frame? frame)]}
   (->>
     (ask frame (str "Player " player-number ", what do you want to call your faction?"))
-    (add-player world true))
+    (main/add-player world true))
   )
 
 (defn play-game []
-  (do
+  (let [f (frame :title game-title)
+        world (main/empty-world lib/locations)]
     (native!)
-    (def f (frame :title game-title))
     (-> f pack! show!)
     (display f "PLACEHOLDER LOADING MESSAGE")
-    (def world (empty-world default-locations))
-
     (->>
       (ask f "How many human players?")
-      (. Integer parseInt)
-      (+ 1)
+      (Integer/parseInt)
+      (inc)
       (range 1)
-      (map (partial ask-new-player world f))
-      )
-    )
-  )
+      (map (partial ask-new-player world f)))))
 
-;Test stuff
+;;; Test stuff, remove before selling code for $100k
+
 (def sample-options ["option 1" "option 2" "option 3"])
-;(def sample-options {"option 1" #(println "picked 1")
-;                     "option 2" #(println "picked 2")
-;                     "option 3" #(println "picked 3")})
-;(def sample-options
-;  [(->Option
-;     "option 1" #(println "picked 1"))
-;   (->Option
-;     "option 2" #(println "picked 2"))
-;   (->Option
-;     "option 3" #(println "picked 3"))]
-;  )

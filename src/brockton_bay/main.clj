@@ -2,21 +2,64 @@
   (:require [clojure.string :as string]
             [clojure.data :as data]
             [clojure.stacktrace :as stacktrace]
-            [clojure.test :as test])
-  (:import (java.util UUID))
-  (:use brockton-bay.library)
-  )
+            [clojure.test :as test]
+            [brockton-bay.library :as lib])
+  (:import (java.util UUID)))
 
-(defrecord World
-  [players
-   locations
-   people])
+;;; Flexible functions.
+
+(defn dissoc-in
+  ;From clojure/core.incubator. Will likely be in clojure core someday.
+  "Dissociates an entry from a nested associative structure returning a new
+  nested structure. keys is a sequence of keys. Any empty maps that result
+  will not be present in the new structure."
+  [m [k & ks :as keys]]
+  (if ks
+    (if-let [nextmap (get m k)]
+      (let [newmap (dissoc-in nextmap ks)]
+        (if (seq newmap)
+          (assoc m k newmap)
+          (dissoc m k)))
+      m)
+    (dissoc m k)))
+
+(defn rand-in-range
+  "Generates a random int between min and max (both included)."
+  [min, max]
+  {:pre  [(integer? min)
+          (integer? max)
+          (<= min max)]
+   :post [(integer? %)
+          (<= min % max)]}
+  (+ min (rand-int (- (inc max) min))))
+
+(defn same-keys
+  "Finds all maps in 'source' that have the same values as the 'template' map for each of the 'keys'."
+  [template source & keys]
+  (filter #(= (select-keys template keys) (select-keys % keys)) source))
+
+(defn different-keys
+  ;; HACK : got frustrated on this one, definitely some better solutions.
+  [template source & keys]
+  "Finds all maps in 'source' that have NONE of the same values as the 'template' map for the 'keys'."
+  (filter #(zero? (count (nth
+                           (data/diff
+                             (select-keys template keys)
+                             (select-keys % keys))
+                           2)))
+          source))
+
+;;; Player
 
 (defrecord Player
   [id
    ^boolean is-human
    faction
    cash])
+
+(defn player? [x] (instance? Player x))
+
+;;; Person
 
 (defrecord Person
   [id
@@ -25,51 +68,13 @@
    faction
    location])
 
-;(defn people->world [people]
-;  (->World
-;    (zipmap (map :id people) people)))
-
-(defn empty-world [locations]
-  (->World []
-           locations
-           [])
-  )
-
-(defn add-player [world is-human faction]
-  {:pre [(instance? World world)
-         (instance? Boolean is-human)
-         (seq faction)]}
-  (let [player
-        (->Player
-          (UUID/randomUUID)
-          is-human
-          faction
-          0)]
-    (update-in world [:players] conj player)))
-
-(defn world->people [world]
-  (map val (:people world)))
-
-(defn world->ids [world]
-  (map :id (world->people world)))
-
 (defn random-name [name-components]
-  {:pre [(seq name-components)]}
+  {:pre  [(seq name-components)]
+   :post [(string? %)
+          (seq %)]}
   (str
     (string/capitalize (rand-nth name-components))
-    (rand-nth name-components)
-    ;" "
-    ;(string/capitalize (rand-nth name-components))
-    ;(rand-nth name-components)
-    ))
-
-(defn rand-in-range
-  "Generates a random int between min-incl and max-incl (both included)."
-  [min-incl, max-incl]
-  {:pre [(integer? min-incl)
-         (integer? max-incl)
-         (<= min-incl max-incl)]}
-  (+ min-incl (rand-int (- (+ 1 max-incl) min-incl))))
+    (rand-nth name-components)))
 
 (defn random-person [name-components factions locations]
   {:pre [(seq factions)
@@ -85,7 +90,28 @@
     (rand-nth locations)                                    ;location
     ))
 
+;;; World
+
+(defrecord World
+  [players
+   locations
+   people])
+
+(defn world? [x] (instance? World x))
+
+(defn world->people [world]
+  (map val (:people world)))
+
+(defn world->ids [world]
+  (map :id (world->people world)))
+
+(defn empty-world [locations]
+  (->World []
+           locations
+           []))
+
 (defn random-world
+  ;; HACK: should be based on empty-world and an add-person.
   [name-components factions locations nb-people]
   (let [people
         (repeatedly
@@ -96,25 +122,30 @@
       locations
       (zipmap (map :id people) people))))
 
-(defn by-key [key source]
-  (group-by (keyword key) source))
+(defn add-player
+  ([world player]
+   {:pre [(world? world)
+          (player? player)]}
+   (update-in world [:players] conj player))
+  ([world is-human faction]
+   {:pre [(world? world)
+          (instance? Boolean is-human)
+          (seq faction)]}
+   (add-player
+     world
+     (->Player
+       (UUID/randomUUID)
+       is-human
+       faction
+       0))))
 
-(defn same-keys [template source & keys]
-  (filter #(= (select-keys template keys) (select-keys % keys)) source))
+;;; Game-specific functions
 
-(defn different-keys [template source & keys]
-  (filter #(= (count (nth (data/diff (select-keys template keys) (select-keys % keys)) 2)) 0) source))
-
-;(defn different-key [template source key]
-;  (filter #(not= (select-keys template [key]) (select-keys % [key])) source)
-;  )
-
-;(defn different-keys [template source & keys]
-;  (reduce (partial different-key template) source keys)
-
-(defn inflict [damage world id]
+(defn inflict
+  "Deals damage to the person with that id, taking armour into account."
+  [damage world id]
   {:pre [(integer? damage)
-         (instance? World world)
+         (world? world)
          (seq (get-in world [:people id]))]}
   (let [inflicted (max 1 (- damage (get-in world [:people id :armour])))
         target (get-in world [:people id])
@@ -122,8 +153,12 @@
     (println (str (:name target) " took " inflicted " damage."))
     outcome))
 
-(defn attack-local-enemy [world id]
-  {:pre [(instance? World world)
+(defn attack-local-enemy
+  ;; HACK: can probably be made much cleaner.
+  ;; TODO: remove prints once GUI is working.
+  "Pick a random person from another faction in the same location, and damage them."
+  [world id]
+  {:pre [(world? world)
          (seq (get-in world [:people id]))]}
   (let [attacker (get-in world [:people id])]
     (as->
@@ -147,110 +182,83 @@
                           ")."))
             $2)
           (:id $2)
-          (inflict (:damage attacker) world $2)
-          )))))
+          (inflict (:damage attacker) world $2))))))
 
-(defn dissoc-in
-  "Dissociates an entry from a nested associative structure returning a new
-  nested structure. keys is a sequence of keys. Any empty maps that result
-  will not be present in the new structure."
-  [m [k & ks :as keys]]
-  (if ks
-    (if-let [nextmap (get m k)]
-      (let [newmap (dissoc-in nextmap ks)]
-        (if (seq newmap)
-          (assoc m k newmap)
-          (dissoc m k)))
-      m)
-    (dissoc m k)))
-
-(defn clean-dead [world]
-  ;{:pre [(instance? World world)]}
+(defn clean-dead
+  ;; TODO: remove prints once GUI is working.
+  "Removes all people with <= 0 HP."
+  [world]
+  {:pre [(world? world)]}
   (let [corpse-ids (map :id (filter #(<= (:hp %) 0) (vals (get-in world [:people]))))
-        outcome (reduce (fn [x y] (dissoc-in x [:people y])) world corpse-ids)]
+        outcome (reduce #(dissoc-in %1 [:people %2]) world corpse-ids)]
     (print "*** Deaths: ")
     (println (map :name (first
                           (data/diff
                             (set (world->people world))
                             (set (world->people outcome))))))
-    outcome
-    ))
+    outcome))
 
-(defn teleport [destination world id]
+(defn change-location [destination world id]
+  ;; TODO: remove prints once GUI is working.
   {:pre [(seq destination)
-         (instance? World world)
+         (world? world)
          (seq (get-in world [:people id]))]}
   (do
     (println (str
                (get-in world [:people id :name])
                " teleported to "
                destination "."))
-    (assoc-in world [:people id :location] destination)
-    )
-  ;(assoc-in world [:people id :location] destination)
-  )
+    (assoc-in world [:people id :location] destination)))
 
-(defn teleport-if-bored [world id]
-  {:pre [(instance? World world)
+(defn teleport-if-bored
+  ;; HACK: can probably be made much cleaner.
+  "Check if this person's location contains an enemy. If not, teleport it to a location that does."
+  [world id]
+  {:pre [(world? world)
          (seq (get-in world [:people id]))]}
   (let [person (get-in world [:people id])]
     (as->
       (same-keys person (world->people world) :location) $
       (different-keys person $ :faction)
       (count $)
-      (if (= $ 0)
+      (if (zero? $)
         (as->
           (different-keys person (world->people world) :faction) $2
           (if (empty? $2)
             world                                           ;This person has no enemies left anywhere in the world.
             (as-> (rand-nth $2) $3
                   (:location $3)
-                  (teleport $3 world id))))
-        world                                               ;This person has enemies left at its current location.
-        ))))
+                  (change-location $3 world id))))
+        world))))                                           ;This person has enemies left at its current location.
 
 (defn on-tick
   "Each person attacks a random enemy in the same location (if any).
   Once their location is clear, they teleport to another location."
   [world]
-  {:pre [(instance? World world)]}
+  {:pre [(world? world)]}
   (as->
     (reduce attack-local-enemy world (world->ids world)) $
     (clean-dead $)
-    (reduce teleport-if-bored $ (world->ids $))
-    ))
+    (reduce teleport-if-bored $ (world->ids $))))
 
-
-
-(def sample-name-components
-  ["angel" "demon" "beast" "monster"
-   "fire" "ice"
-   "arrow" "knife" "rainbow"
-   "eye" "muscle" "skull" "bone" "blood"
-   "death" "power"
-   "dark" "light"
-   "twilight" "dawn"
-   "wise" "strong" "cold"
-   "killer" "hunter" "stomper"])
+;;; Test stuff, remove before selling code for $100k
 
 (def sample-factions ["red" "blue"])
 
 (defn sample-person []
   (random-person
-    sample-name-components
+    lib/name-components
     sample-factions
-    default-locations))
+    lib/locations))
 
 (defn sample-world []
   (random-world
-    sample-name-components
+    lib/name-components
     sample-factions
-    default-locations
+    lib/locations
     20))
 
-;test stuff
 (def stuff (sample-world))
 (def dude (rand-nth (world->people stuff)))
-(defn affect-dude [thing-to-do] (clojure.pprint/pprint (get-in thing-to-do [:people (:id dude)])))
 (defn ticks [x] (take x (iterate on-tick stuff)))
 ;(stacktrace/print-stack-trace *e 5)
