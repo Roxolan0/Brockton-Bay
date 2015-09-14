@@ -1,7 +1,7 @@
 (ns brockton-bay.main
-  (:require [clojure.string :as string])
-  (:require [clojure.data :as data])
-  (:require [clojure.stacktrace :as stacktrace])
+  (:require [clojure.string :as string]
+            [clojure.data :as data]
+            [clojure.stacktrace :as stacktrace])
   (:import (java.util UUID))
   )
 
