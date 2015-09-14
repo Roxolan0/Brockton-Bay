@@ -1,5 +1,4 @@
-(ns brockton-bay.library
-  (:use brockton-bay.main))
+(ns brockton-bay.library)
 
 (def default-locations ["Drug trade"
                         "Bank robbery"
