@@ -1,7 +1,7 @@
 (ns brockton-bay.gui
   (require [clojure.test :as test]
            [seesaw.core :refer :all]
-           [brockton-bay.main :as main]
+           [brockton-bay.game :as game]
            [brockton-bay.library :as lib]))
 
 ;;; English strings.
@@ -33,12 +33,12 @@
   {:pre [(frame? frame)]}
   (->>
     (ask frame (str "Player " player-number ", what do you want to call your faction?"))
-    (main/add-player world true))
+    (game/add-player world true))
   )
 
-(defn play-game []
+(defn -main []
   (let [f (frame :title game-title)
-        world (main/empty-world lib/locations)]
+        world (game/empty-world lib/locations)]
     (native!)
     (-> f pack! show!)
     (display f "PLACEHOLDER LOADING MESSAGE")

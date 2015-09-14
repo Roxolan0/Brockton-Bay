@@ -1,4 +1,4 @@
-(ns brockton-bay.main
+(ns brockton-bay.game
   (:require [clojure.string :as string]
             [clojure.data :as data]
             [clojure.stacktrace :as stacktrace]
