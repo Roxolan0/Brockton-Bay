@@ -6,8 +6,7 @@
             [brockton-bay.library
              :as lib
              :refer [->Person-stats]])
-  (:import (java.util UUID)
-           (brockton_bay.library Location)))
+  (:import (java.util UUID)))
 
 ;;; Flexible functions.
 
@@ -53,47 +52,47 @@
           source))
 
 (defn add-with-id
-  "Add the source to the destination sub-map found at the key, indexed by source's id."
-  [destination key source]
-  (update-in destination [key] conj {(:id source) source}))
+  "Add the source to the destination sub-map, indexed by an id (provided or generated)."
+  ([destination submap id source]
+   (update-in destination [submap] conj {id source}))
+  ([destination submap source]
+   (add-with-id destination submap (UUID/randomUUID) source)))
+
+;(defn add-with-id
+;  "Add the source to the destination sub-map found at the key, indexed by source's id."
+;  [destination key source]
+;  (update-in destination [key] conj {(:id source) source}))
 
 ;;; Player
 
 (defrecord Player
-  [id
-   name
+  [name
    ^boolean is-human
    cash])
 
 (defn player? [x] (instance? Player x))
 
-(defn new-player [name is-human cash]
-  (->Player (UUID/randomUUID)
-            name
-            is-human
-            cash))
-
 ;;; Location
 
+(defrecord Location
+  [name
+   ^long payoff])
+
 (defn location? [x] (instance? Location x))
+
+(defn random-payoff [turn-count]
+  {:pre [(number? turn-count)]}
+  (rand-in-range 100 (+ 100 (* 100 turn-count))))
 
 ;;; Person
 
 (defrecord Person
-  [id
-   name
+  [name
    stats
    player-id
    location-id])
 
 (defn person? [x] (instance? Person x))
-
-(defn new-person [name stats player-id location-id]
-  (->Person (UUID/randomUUID)
-            name
-            stats
-            player-id
-            location-id))
 
 (defn random-person-name [name-components]
   {:pre  [(seq name-components)]
@@ -102,21 +101,6 @@
   (str
     (string/capitalize (rand-nth name-components))
     (rand-nth name-components)))
-
-;(defn random-person [name-components player-ids location-ids]
-;  {:pre [(seq player-ids)
-;         (seq location-ids)]}
-;  (->Person
-;    (UUID/randomUUID)                                       ;id
-;    (random-person-name name-components)                           ;name
-;    (->Person-stats
-;      (rand-in-range 0 10)                                  ;speed
-;      (rand-in-range 1 5)                                   ;damage
-;      (rand-in-range 0 3)                                   ;armour
-;      (rand-in-range 1 10))                                 ;hp
-;    (rand-nth player-ids)                                   ;player-id
-;    (rand-nth location-ids)                                 ;location-id
-;    ))
 
 ;;; World
 
@@ -127,56 +111,35 @@
 
 (defn world? [x] (instance? World x))
 
-;(defn world->people [world]
-;  (map val (:people world)))
-
-;(defn world->people-ids [world]
-;  (map :id (world->people world)))
-
-;(defn world->factions [world]
-;  (set (map :faction (:players world))))
-
 (defn empty-world []
   (->World {} {} {}))
 
-;(defn random-world
-;  ;; HACK: should be based on empty-world and the add- functions.
-;  [name-components factions locations nb-people]
-;  (let [people
-;        (repeatedly
-;          nb-people
-;          (partial random-person name-components factions (keys locations)))]
-;    (->World
-;      []
-;      locations
-;      (zipmap (map :id people) people))))
-
-;(defn add-player [world player]
-;  {:pre [(world? world)
-;         (player? player)]}
-;  (update-in world [:players] conj {(:id player) player}))
+;; HACK: the add- should be just one generic function.
+(defn add-locations
+  "Pick some random locations from library and add them to the world."
+  [world nb-locations]
+  {:pre [(world? world)
+         (number? nb-locations)]}
+  (->> lib/location-names
+       (shuffle)
+       (take nb-locations)
+       (reduce #(add-with-id %1 :locations (->Location %2 0)))))
 
 (defn add-ai-players
-  [world cash ai-number]
+  [world cash nb-ais]
   {:pre [(world? world)
-         (number? ai-number)]}
-  (let [names (take ai-number (shuffle lib/ai-names))]
-    (reduce #(add-with-id %1 :players (new-player %2 false cash))
+         (number? nb-ais)]}
+  (let [names (take nb-ais (shuffle lib/ai-names))]
+    (reduce #(add-with-id %1 :players (->Player %2 false cash))
             world
             names)))
-
-;(defn add-person
-;  ([world person]
-;   {:pre [(world? world)
-;          (person? person)]}
-;   (update-in world [:people] conj person)))
 
 (defn add-templates
   "Pick a random stat template from library and generate a Person with the player-id from it."
   ([world player-id]
    {:pre [(world? world)]}
    (let [template (rand-nth (seq lib/people-templates))]
-     (add-with-id world :people (new-person
+     (add-with-id world :people (->Person
                                   (key template)
                                   (val template)
                                   player-id
@@ -268,59 +231,6 @@
                destination "."))
     (assoc-in world [:people id :location] destination)))
 
-(defn teleport-if-bored
-  ;; REVIEW: no unit tests and seen a bunch of refactorings go by, who knows if it still works.
-  ;; HACK: can probably be made much cleaner.
-  ;; Who cares anyway, this code was only useful for the old version of the game.
-  "Check if this person's location contains an enemy. If not, teleport it to a location that does."
-  [world id]
-  {:pre [(world? world)
-         (seq (get-in world [:people id]))]}
-  (let [person (get-in world [:people id])]
-    (as->
-      (same-keys person (vals (:people world)) :location) $
-      (different-keys person $ :faction)
-      (count $)
-      (if (zero? $)
-        (as->
-          (different-keys person (vals (:people world)) :faction) $2
-          (if (empty? $2)
-            world                                           ;This person has no enemies left anywhere in the world.
-            (as-> (rand-nth $2) $3
-                  (:location $3)
-                  (change-location $3 world id))))
-        world))))                                           ;This person has enemies left at its current location.
-
-(defn on-tick
-  ;; REVIEW: no unit tests and seen a bunch of refactorings go by, who knows if it still works.
-  ;; Who cares anyway, this code was only useful for the old version of the game.
-  "Each person attacks a random enemy in the same location (if any).
-  Once their location is clear, they teleport to another location."
-  [world]
-  {:pre [(world? world)]}
-  (as->
-    (reduce attack-local-enemy world (keys (:people world))) $
-    (clean-dead $)
-    (reduce teleport-if-bored $ (keys (:people world)))))
-
 ;;; Test stuff, HACK: remove
 
-(def sample-factions ["red" "blue"])
-
-;(defn sample-person []
-;  (random-person
-;    lib/person-name-components
-;    sample-factions
-;    lib/locations))
-;
-;(defn sample-world []
-;  (random-world
-;    lib/person-name-components
-;    sample-factions
-;    lib/locations
-;    20))
-;
-;(def stuff (sample-world))
-;(def dude (rand-nth (world->people stuff)))
-;(defn ticks [x] (take x (iterate on-tick stuff)))
 ;;(stacktrace/print-stack-trace *e 5)

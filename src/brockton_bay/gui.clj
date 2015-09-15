@@ -35,7 +35,7 @@
   {:pre [(frame? fr)]}
   (as->
     (ask fr (str "Player " player-number ", what do you want to call your faction?")) $
-    (game/new-player $ true lib/starting-cash)
+    (game/->Player $ true lib/starting-cash)
     (game/add-with-id world :players $))
   )
 
@@ -57,6 +57,16 @@
     (game/add-ai-players world lib/starting-cash)
     ))
 
+;;; The big gameplay functions
+
+(defn game-turn [world]
+  ; TODO: For each Location, set a random Payoff.
+  ; TODO: Print full state of the World.
+  ; TODO: Call something to distribute all People
+  ; TODO: For each location, call something to do combat
+  world
+  )
+
 (defn -main
   "Entry point to play the game as a whole."
   []
@@ -65,10 +75,14 @@
     (native!)
     (-> fr pack! show!)
     (display fr "PLACEHOLDER LOADING MESSAGE")
-    (->
-      (ask-nb-humans world fr)
-      (ask-nb-ais fr)
-      (game/add-templates-to-everyone lib/people-per-faction)
+    (as->
+      (ask-nb-humans world fr) $
+      (ask-nb-ais $ fr)
+      (game/add-templates-to-everyone $ lib/people-per-faction)
+      (game/add-locations $ lib/nb-locations)
+      (iterate game-turn $)
+      (nth $ lib/nb-turns)
+      ; TODO: Call something to print final score.
       )))
 
 ;;; Test stuff, HACK: remove

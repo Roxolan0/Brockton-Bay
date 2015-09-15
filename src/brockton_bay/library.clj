@@ -5,13 +5,10 @@
 
 (def people-per-faction 6)
 (def starting-cash 0)
+(def nb-locations 4)
+(def nb-turns)
 
 ;;; Game defrecords (here to avoid circular dependencies)
-
-(defrecord Location
-  [id
-   name
-   ^long payoff])
 
 (defrecord Person-stats
   [^long speed
@@ -21,13 +18,16 @@
 
 ;;; Predefined game elements
 
-(def locations
-  ;; HACK: should not have to copy-paste (UUID/randomUUID).
-  (map (partial apply ->Location)
-       [[(UUID/randomUUID) "Drug trade" 0]
-        [(UUID/randomUUID) "Bank robbery" 0]
-        [(UUID/randomUUID) "Mercenary work" 0]
-        [(UUID/randomUUID) "Kidnapping" 0]]))
+(def location-names
+  ["Drug trade"
+   "Bank robbery"
+   "Mercenary work"
+   "Kidnapping"])
+;(map (partial apply ->Location)
+;     [[(UUID/randomUUID) "Drug trade" 0]
+;      [(UUID/randomUUID) "Bank robbery" 0]
+;      [(UUID/randomUUID) "Mercenary work" 0]
+;      [(UUID/randomUUID) "Kidnapping" 0]]))
 
 (def ai-names
   ["The Azian Bad Boys"
