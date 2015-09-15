@@ -45,45 +45,56 @@
                {:a 4 :b 2 :c 3})))
 
 (facts "About empty-world."
-       (seq (:players (game/empty-world lib/locations)))
-       => nil
+       (game/world? (game/empty-world))
+       => true
 
-       (:locations (game/empty-world lib/locations))
-       => lib/locations
-
-       (seq (:people (game/empty-world lib/locations)))
+       (seq (:locations (game/empty-world)))
        => nil)
 
-(facts "About add-player."
-       (let [world (game/empty-world lib/locations)
-             player (game/->Player (UUID/randomUUID), false, "foo", 0)]
-
-         (-> (game/add-player world player)
-             (:players)
-             (count))
-         => 1
-
-         (-> (game/add-player world player)
-             (game/add-player player)
-             (:players)
-             (count))
-         => 2
-
-         (-> (game/add-player world true "bleh")
-             (:players)
-             (count))
-         => 1
-
-         (-> (game/add-player world true "bleh")
-             (game/add-player true "blob")
-             (:players)
-             (count))
-         => 2
-
-         (as-> (game/add-player world true "bleh") $
-             (game/add-player $ true "blob")
-             (:players $)
-             (filter #(= (:faction %) "blob") $)
-             (count $))
-         => 1))
-
+;(facts "About add-player."
+;       (let [world (game/empty-world lib/locations)
+;             player (game/->Player (UUID/randomUUID), false, "foo", 0)]
+;
+;         (-> (game/add-player world player)
+;             (:players)
+;             (count))
+;         => 1
+;
+;         (-> (game/add-player world player)
+;             (game/add-player player)
+;             (:players)
+;             (count))
+;         => 2
+;
+;         (-> (game/add-player world true "bleh")
+;             (:players)
+;             (count))
+;         => 1
+;
+;         (-> (game/add-player world true "bleh")
+;             (game/add-player true "blob")
+;             (:players)
+;             (count))
+;         => 2
+;
+;         (as-> (game/add-player world true "bleh") $
+;             (game/add-player $ true "blob")
+;             (:players $)
+;             (filter #(= (:faction %) "blob") $)
+;             (count $))
+;         => 1))
+;
+;(facts "About add-person."
+;       (let [world (game/empty-world lib/locations)
+;             person (game/->Person (UUID/randomUUID), "Bob", (val (rand-nth (seq lib/people-templates))), "foo", nil)]
+;         (-> (game/add-person world person)
+;             (:people)
+;             (count))
+;         => 1
+;
+;         (-> (game/add-person world person)
+;             (game/add-person person)
+;             (:people)
+;             (count))
+;         => 2
+;         ))
