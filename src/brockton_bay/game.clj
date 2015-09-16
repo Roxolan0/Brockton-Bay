@@ -107,12 +107,20 @@
 (defrecord World
   [players
    locations
-   people])
+   people
+   turn-count])
 
 (defn world? [x] (instance? World x))
 
 (defn empty-world []
-  (->World {} {} {}))
+  (->World {} {} {} 0))
+
+(defn get-players-cash [world]
+  {:pre [(world? world)]}
+  (zipmap
+    (map :name (vals (:players world)))
+    (map :cash (vals (:players world))))
+  )
 
 ;; HACK: the add- should be just one generic function.
 (defn add-locations
@@ -123,7 +131,7 @@
   (->> lib/location-names
        (shuffle)
        (take nb-locations)
-       (reduce #(add-with-id %1 :locations (->Location %2 0)))))
+       (reduce #(add-with-id %1 :locations (->Location %2 0)) world)))
 
 (defn add-ai-players
   [world cash nb-ais]
@@ -233,4 +241,4 @@
 
 ;;; Test stuff, HACK: remove
 
-;;(stacktrace/print-stack-trace *e 5)
+;; (clojure.stacktrace/print-stack-trace *e 5)

@@ -6,7 +6,7 @@
 (def people-per-faction 6)
 (def starting-cash 0)
 (def nb-locations 4)
-(def nb-turns)
+(def nb-turns 3)
 
 ;;; Game defrecords (here to avoid circular dependencies)
 

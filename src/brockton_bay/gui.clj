@@ -25,7 +25,7 @@
    (input fr message))
   ([frame message options]
    {:pre [(frame? frame)
-          (seq options)]}                                    ;false if options is nil or empty
+          (seq options)]}                                   ;false if options is nil or empty
    (input frame message :choices options))
   )
 
@@ -60,11 +60,22 @@
 ;;; The big gameplay functions
 
 (defn game-turn [world]
+  (-> world
+      (update :turn-count inc))
   ; TODO: For each Location, set a random Payoff.
   ; TODO: Print full state of the World.
   ; TODO: Call something to distribute all People
   ; TODO: For each location, call something to do combat
-  world
+  )
+
+(defn show-score [world fr]
+  (->>
+     (game/get-players-cash world)
+     (str "Final score: \n")
+     (text :multi-line? true :text)
+     (scrollable)
+     (display fr))
+  (pack! fr)
   )
 
 (defn -main
@@ -82,7 +93,7 @@
       (game/add-locations $ lib/nb-locations)
       (iterate game-turn $)
       (nth $ lib/nb-turns)
-      ; TODO: Call something to print final score.
+      (show-score $ fr)
       )))
 
 ;;; Test stuff, HACK: remove

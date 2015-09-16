@@ -51,50 +51,27 @@
        (seq (:locations (game/empty-world)))
        => nil)
 
-;(facts "About add-player."
-;       (let [world (game/empty-world lib/locations)
-;             player (game/->Player (UUID/randomUUID), false, "foo", 0)]
-;
-;         (-> (game/add-player world player)
-;             (:players)
-;             (count))
-;         => 1
-;
-;         (-> (game/add-player world player)
-;             (game/add-player player)
-;             (:players)
-;             (count))
-;         => 2
-;
-;         (-> (game/add-player world true "bleh")
-;             (:players)
-;             (count))
-;         => 1
-;
-;         (-> (game/add-player world true "bleh")
-;             (game/add-player true "blob")
-;             (:players)
-;             (count))
-;         => 2
-;
-;         (as-> (game/add-player world true "bleh") $
-;             (game/add-player $ true "blob")
-;             (:players $)
-;             (filter #(= (:faction %) "blob") $)
-;             (count $))
-;         => 1))
-;
-;(facts "About add-person."
-;       (let [world (game/empty-world lib/locations)
-;             person (game/->Person (UUID/randomUUID), "Bob", (val (rand-nth (seq lib/people-templates))), "foo", nil)]
-;         (-> (game/add-person world person)
-;             (:people)
-;             (count))
-;         => 1
-;
-;         (-> (game/add-person world person)
-;             (game/add-person person)
-;             (:people)
-;             (count))
-;         => 2
-;         ))
+(facts "About add-with-id."
+       (let [world (game/empty-world)
+             player1 (game/->Player "foo", false, 0)
+             player2 (game/->Player "bar", false, 0)]
+
+         (-> (game/add-with-id world :players player1)
+             (game/world?))
+         => true
+
+         (-> (game/add-with-id world :players player1)
+             (:players)
+             (count))
+         => 1
+
+         (-> (game/add-with-id world :players player1)
+             (game/add-with-id :players player2)
+             (game/world?))
+         => true
+
+         (-> (game/add-with-id world :players player1)
+             (game/add-with-id :players player2)
+             (:players)
+             (count))
+         => 2))
