@@ -2,7 +2,8 @@
   (require [clojure.test :as test]
            [seesaw.core :refer :all]
            [brockton-bay.game :as game]
-           [brockton-bay.library :as lib]))
+           [brockton-bay.library :as lib]
+           [brockton-bay.util :as util]))
 
 ;;;; TODO: validate all inputs, and get rid of the "Cancel" button.
 
@@ -39,7 +40,7 @@
   (as->
     (ask fr (str "Player " player-number ", what do you want to call your faction?")) $
     (game/->Player $ true lib/starting-cash)
-    (game/add-with-id world :players $))
+    (util/add-with-id world :players $))
   )
 
 (defn ask-nb-humans [world fr]
