@@ -1,105 +1,7 @@
 (ns brockton-bay.game
   (:require [brockton-bay.util :as util]
-            [brockton-bay.library
-             :as lib
-             :refer [->Person-stats]]))
+            [brockton-bay.worlds :as worlds]))
 
-;;; Player
-
-(defrecord Player
-  [name
-   ^boolean is-human
-   cash])
-
-#_(defn player? [x] (instance? Player x))
-
-;;; Location
-
-(defrecord Location
-  [name
-   ^long payoff])
-
-#_(defn location? [x] (instance? Location x))
-
-;;; Person
-
-(defrecord Person
-  [name
-   stats
-   player-id
-   location-id])
-
-#_(defn person? [x] (instance? Person x))
-
-#_(defn random-person-name [name-components]
-  {:pre  [(seq name-components)]
-   :post [(string? %)
-          (seq %)]}
-  (str
-    (string/capitalize (rand-nth name-components))
-    (rand-nth name-components)))
-
-;;; World
-
-(defrecord World
-  [players
-   locations
-   people
-   turn-count])
-
-(defn world? [x] (instance? World x))
-
-(defn empty-world []
-  (->World {} {} {} 0))
-
-(defn get-players-cash [world]
-  {:pre [(world? world)]}
-  (zipmap
-    (map :name (vals (:players world)))
-    (map :cash (vals (:players world))))
-  )
-
-;; HACK: the add- should be just one generic function.
-(defn add-locations
-  "Pick some random locations from library and add them to the world."
-  [world nb-locations]
-  {:pre [(world? world)
-         (number? nb-locations)]}
-  (->> lib/location-names
-       (shuffle)
-       (take nb-locations)
-       (reduce #(util/add-with-id %1 :locations (->Location %2 0)) world)))
-
-(defn add-ai-players
-  [world cash nb-ais]
-  {:pre [(world? world)
-         (number? nb-ais)]}
-  (let [names (take nb-ais (shuffle lib/ai-names))]
-    (reduce #(util/add-with-id %1 :players (->Player %2 false cash))
-            world
-            names)))
-
-(defn add-templates
-  "Pick a random stat template from library and generate a Person with the player-id from it."
-  ([world player-id]
-   {:pre [(world? world)]}
-   (let [template (rand-nth (seq lib/people-templates))]
-     (util/add-with-id world :people (->Person
-                                  (key template)
-                                  (val template)
-                                  player-id
-                                  nil))))
-  ([nb-templates world player-id]
-   {:pre [(world? world)]}
-   (reduce add-templates world (repeat nb-templates player-id))
-    ))
-
-(defn add-templates-to-everyone
-  [world nb-templates]
-  {:pre [(world? world)]}
-  (reduce
-    (partial add-templates nb-templates)
-    world (keys (:players world))))
 
 ;;; Game-specific functions
 
@@ -108,8 +10,8 @@
   (util/rand-in-range (* 50 turn-count) (* 100 turn-count)))
 
 (defn assign-payoffs [world]
-  {:pre [(world? world)]
-   :post [(world? %)]}
+  {:pre  [(worlds/world? world)]
+   :post [(worlds/world? %)]}
   (reduce
     #(assoc-in %1 [:locations %2 :payoff] (random-payoff (:turn-count world)))
     world

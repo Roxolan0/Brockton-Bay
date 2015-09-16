@@ -1,9 +1,11 @@
 (ns brockton-bay.gui
-  (require [clojure.test :as test]
-           [seesaw.core :refer :all]
+  (require [seesaw.core :refer :all]
            [brockton-bay.game :as game]
            [brockton-bay.library :as lib]
-           [brockton-bay.util :as util]))
+           [brockton-bay.util :as util]
+           [brockton-bay.worlds :as worlds]
+           [brockton-bay.generation :as generation]
+           [brockton-bay.players :as players]))
 
 ;;;; TODO: validate all inputs, and get rid of the "Cancel" button.
 
@@ -34,17 +36,17 @@
 ;;; Game-specific GUI functions
 
 (defn ask-new-player [world fr player-number]
-  {:pre [(game/world? world)
+  {:pre [(worlds/world? world)
          (frame? fr)
          (number? player-number)]}
   (as->
     (ask fr (str "Player " player-number ", what do you want to call your faction?")) $
-    (game/->Player $ true lib/starting-cash)
+    (players/->Player $ true lib/starting-cash)
     (util/add-with-id world :players $))
   )
 
 (defn ask-nb-humans [world fr]
-  {:pre [(game/world? world)
+  {:pre [(worlds/world? world)
          (frame? fr)]}
   (->>
     (ask fr "How many human players?")
@@ -55,16 +57,16 @@
     ))
 
 (defn ask-nb-ais [world fr]
-  {:pre [(game/world? world)
+  {:pre [(worlds/world? world)
          (frame? fr)]}
   (->>
     (ask fr "How many AI players?")
     (Integer/parseInt)
-    (game/add-ai-players world lib/starting-cash)
+    (generation/add-ai-players world lib/starting-cash)
     ))
 
 (defn area-location [world location-id]
-  {:pre [(game/world? world)]}
+  {:pre [(worlds/world? world)]}
   (let [location-text
         (str
           (get-in world [:locations location-id :name])
@@ -73,7 +75,7 @@
     (text :text location-text)))
 
 (defn area-locations [world]
-  {:pre [(game/world? world)]}
+  {:pre [(worlds/world? world)]}
   (->> world
        (:locations)
        (keys)
@@ -81,11 +83,11 @@
        (reduce top-bottom-split)))
 
 (defn area-score [world]
-  {:pre [(game/world? world)]}
-  (text :text (str (game/get-players-cash world))))
+  {:pre [(worlds/world? world)]}
+  (text :text (str (worlds/get-players-cash world))))
 
 (defn state-of-the-world [world fr]
-  {:pre [(game/world? world)
+  {:pre [(worlds/world? world)
          (frame? fr)]}
   (do
     (display
@@ -98,7 +100,7 @@
 ;;; The big gameplay functions
 
 (defn distribute-person [world fr person-id]
-  {:pre [(game/world? world)
+  {:pre [(worlds/world? world)
          (frame? fr)]}
   (let [person (get-in world [:people person-id])
         player (get-in world [:players (:player-id person)])
@@ -112,15 +114,15 @@
                    "?")
         options (keys (:locations world))                   ; TODO: turn into names to ask, and then back
         ]
-    (as->
-      (ask fr question options) $
+    (do
+      (ask fr question options)
       ;(game/change-location )                               ; TODO: make it work
       world                                                 ; TODO: remove
       )))
 
 (defn distribute-people [world fr]
   ;; HACK: should be more like a While (what if placing a person affected other people's speed or location?)
-  {:pre [(game/world? world)
+  {:pre [(worlds/world? world)
          (frame? fr)]}
   (->> world
        (:people)
@@ -135,7 +137,7 @@
        ))
 
 (defn game-turn [world fr]
-  {:pre [(game/world? world)]}
+  {:pre [(worlds/world? world)]}
   (as-> world $
         (update $ :turn-count inc)
         (game/assign-payoffs $)
@@ -150,7 +152,7 @@
 
 (defn show-score [world fr]
   (->>
-    (game/get-players-cash world)
+    (worlds/get-players-cash world)
     (str "Score: \n")
     (text :multi-line? true :text)
     (scrollable)
@@ -162,21 +164,17 @@
   "Entry point to play the game as a whole."
   []
   (let [fr (frame :title game-title)
-        world (game/empty-world)]
+        world (worlds/empty-world)]
     (native!)
     (-> fr pack! show!)
     (display fr "PLACEHOLDER LOADING MESSAGE")
     (as->
       (ask-nb-humans world fr) $
       (ask-nb-ais $ fr)
-      (game/add-templates-to-everyone $ lib/people-per-faction)
-      (game/add-locations $ lib/nb-locations)
+      (generation/add-templates-to-everyone $ lib/people-per-faction)
+      (worlds/add-locations $ lib/nb-locations)
       (iterate #(game-turn % fr) $)
       (nth $ lib/nb-turns)
       (do (show-score $ fr)
           $)
       )))
-
-;;; Test stuff, HACK: remove
-
-(def sample-options ["option 1" "option 2" "option 3"])
