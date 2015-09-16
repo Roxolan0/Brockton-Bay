@@ -61,7 +61,9 @@
 
 (defn game-turn [world]
   (-> world
-      (update :turn-count inc))
+      (update :turn-count inc)
+      (game/assign-payoffs)
+      )
   ; TODO: For each Location, set a random Payoff.
   ; TODO: Print full state of the World.
   ; TODO: Call something to distribute all People
@@ -93,7 +95,8 @@
       (game/add-locations $ lib/nb-locations)
       (iterate game-turn $)
       (nth $ lib/nb-turns)
-      (show-score $ fr)
+      (do (show-score $ fr)
+          $)
       )))
 
 ;;; Test stuff, HACK: remove

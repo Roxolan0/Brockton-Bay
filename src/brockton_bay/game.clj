@@ -80,10 +80,6 @@
 
 (defn location? [x] (instance? Location x))
 
-(defn random-payoff [turn-count]
-  {:pre [(number? turn-count)]}
-  (rand-in-range 100 (+ 100 (* 100 turn-count))))
-
 ;;; Person
 
 (defrecord Person
@@ -165,6 +161,17 @@
     world (keys (:players world))))
 
 ;;; Game-specific functions
+
+(defn random-payoff [turn-count]
+  {:pre [(number? turn-count)]}
+  (rand-in-range (* 50 turn-count) (* 100 turn-count)))
+
+(defn assign-payoffs [world]
+  {:pre [(world? world)]}
+  (reduce
+    #(assoc-in %1 [:locations %2 :payoff] (random-payoff (:turn-count world)))
+    world
+    (keys (:locations world))))
 
 (defn inflict
   ;; REVIEW: no unit tests and seen a bunch of refactorings go by, who knows if it still works.
