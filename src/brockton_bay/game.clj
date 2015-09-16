@@ -167,7 +167,8 @@
   (rand-in-range (* 50 turn-count) (* 100 turn-count)))
 
 (defn assign-payoffs [world]
-  {:pre [(world? world)]}
+  {:pre [(world? world)]
+   :post [(world? %)]}
   (reduce
     #(assoc-in %1 [:locations %2 :payoff] (random-payoff (:turn-count world)))
     world

@@ -15,6 +15,7 @@
 (defn frame? [x] (instance? javax.swing.JFrame x))
 
 (defn display [fr content]
+  {:pre [(frame? fr)]}
   (config! fr :content content)
   (pack! fr)
   content)
@@ -32,7 +33,9 @@
 ;;; Game-specific GUI functions
 
 (defn ask-new-player [world fr player-number]
-  {:pre [(frame? fr)]}
+  {:pre [(game/world? world)
+         (frame? fr)
+         (number? player-number)]}
   (as->
     (ask fr (str "Player " player-number ", what do you want to call your faction?")) $
     (game/->Player $ true lib/starting-cash)
@@ -40,7 +43,8 @@
   )
 
 (defn ask-nb-humans [world fr]
-  {:pre [(frame? fr)]}
+  {:pre [(game/world? world)
+         (frame? fr)]}
   (->>
     (ask fr "How many human players?")
     (Integer/parseInt)
@@ -50,21 +54,57 @@
     ))
 
 (defn ask-nb-ais [world fr]
-  {:pre [(frame? fr)]}
+  {:pre [(game/world? world)
+         (frame? fr)]}
   (->>
     (ask fr "How many AI players?")
     (Integer/parseInt)
     (game/add-ai-players world lib/starting-cash)
     ))
 
+(defn area-location [world location-id]
+  {:pre [(game/world? world)]}
+  (let [location-text
+        (str
+          (get-in world [:locations location-id :name])
+          ": $"
+          (get-in world [:locations location-id :payoff]))]
+    (text :text location-text)))
+
+(defn area-locations [world]
+  {:pre [(game/world? world)]}
+  (->> world
+       (:locations)
+       (keys)
+       (map (partial area-location world))
+       (reduce top-bottom-split)))
+
+(defn area-score [world]
+  {:pre [(game/world? world)]}
+  (text :text (str (game/get-players-cash world))))
+
+(defn state-of-the-world [world fr]
+  {:pre [(game/world? world)
+         (frame? fr)]}
+  (do
+    (display
+      fr
+      (top-bottom-split
+        (area-score world)
+        (area-locations world)))
+    (pack! fr)))
+
 ;;; The big gameplay functions
 
-(defn game-turn [world]
-  (-> world
-      (update :turn-count inc)
-      (game/assign-payoffs)
-      )
-  ; TODO: For each Location, set a random Payoff.
+(defn game-turn [world fr]
+  {:pre [(game/world? world)]}
+  (as-> world $
+        (update $ :turn-count inc)
+        (game/assign-payoffs $)
+        (do (state-of-the-world $ fr)
+            (Thread/sleep 5000)                             ;; TODO: delete this
+            $)
+        )
   ; TODO: Print full state of the World.
   ; TODO: Call something to distribute all People
   ; TODO: For each location, call something to do combat
@@ -72,11 +112,11 @@
 
 (defn show-score [world fr]
   (->>
-     (game/get-players-cash world)
-     (str "Final score: \n")
-     (text :multi-line? true :text)
-     (scrollable)
-     (display fr))
+    (game/get-players-cash world)
+    (str "Score: \n")
+    (text :multi-line? true :text)
+    (scrollable)
+    (display fr))
   (pack! fr)
   )
 
@@ -93,7 +133,7 @@
       (ask-nb-ais $ fr)
       (game/add-templates-to-everyone $ lib/people-per-faction)
       (game/add-locations $ lib/nb-locations)
-      (iterate game-turn $)
+      (iterate #(game-turn % fr) $)
       (nth $ lib/nb-turns)
       (do (show-score $ fr)
           $)
