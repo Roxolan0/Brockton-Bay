@@ -24,10 +24,10 @@
   ([fr message]
    {:pre [(frame? fr)]}
    (input fr message))
-  ([frame message options]
-   {:pre [(frame? frame)
+  ([fr message options]
+   {:pre [(frame? fr)
           (seq options)]}                                   ;false if options is nil or empty
-   (input frame message :choices options))
+   (input fr message :choices options))
   )
 
 ;;; Game-specific GUI functions
@@ -96,6 +96,43 @@
 
 ;;; The big gameplay functions
 
+(defn distribute-person [world fr person-id]
+  {:pre [(game/world? world)
+         (frame? fr)]}
+  (let [person (get-in world [:people person-id])
+        player (get-in world [:players (:player-id person)])
+        question (str
+                   "Where does "
+                   (:name player)
+                   " want to put "
+                   (:name person)
+                   " "
+                   (:stats person)
+                   "?")
+        options (keys (:locations world))                   ; TODO: turn into names to ask, and then back
+        ]
+    (as->
+      (ask fr question options) $
+      ;(game/change-location )                               ; TODO: make it work
+      world                                                 ; TODO: remove
+      )))
+
+(defn distribute-people [world fr]
+  ;; HACK: should be more like a While (what if placing a person affected other people's speed or location?)
+  {:pre [(game/world? world)
+         (frame? fr)]}
+  (->> world
+       (:people)
+       (sort-by #(:speed (:stats (val %))))
+       (map :id)
+       (reduce #(distribute-person %1 fr %2) world)
+       ; while there are people without a location
+       ;; find person with lowest speed
+       ;; ask owner where to put it
+       ;; while there's two factions without a relationship
+       ;;; establish relationship
+       ))
+
 (defn game-turn [world fr]
   {:pre [(game/world? world)]}
   (as-> world $
@@ -104,8 +141,8 @@
         (do (state-of-the-world $ fr)
             (Thread/sleep 5000)                             ;; TODO: delete this
             $)
+        (distribute-people $ fr)
         )
-  ; TODO: Print full state of the World.
   ; TODO: Call something to distribute all People
   ; TODO: For each location, call something to do combat
   )

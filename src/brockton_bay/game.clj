@@ -234,18 +234,18 @@
                             (set (vals (:people outcome)))))))
     outcome))
 
-(defn change-location [destination world id]
+(defn change-location [destination world person-id]
   ;; REVIEW: no unit tests and seen a bunch of refactorings go by, who knows if it still works.
   ;; TODO: remove prints once GUI is working.
   {:pre [(seq destination)
          (world? world)
-         (seq (get-in world [:people id]))]}
+         (seq (get-in world [:people person-id]))]}
   (do
     (println (str
-               (get-in world [:people id :name])
+               (get-in world [:people person-id :name])
                " teleported to "
                destination "."))
-    (assoc-in world [:people id :location] destination)))
+    (assoc-in world [:people person-id :location] destination)))
 
 ;;; Test stuff, HACK: remove
 
