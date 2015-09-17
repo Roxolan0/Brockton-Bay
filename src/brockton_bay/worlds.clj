@@ -21,15 +21,21 @@
     (map :cash (vals (:players world))))
   )
 
-(defn people-at-location [world location-id]
+(defn get-people-at-location [world location-id]
   {:pre [(world? world)]}
   (filter
     #(= location-id (:location-id (val %)))
     (:people world)))
 
-(defn people-without-location [world]
+(defn get-people-without-location [world]
   {:pre [(world? world)]}
-  (people-at-location world nil))
+  (get-people-at-location world nil))
+
+(defn get-dying-people [world]
+  {:pre [(world? world)]}
+  (filter
+    #(>= 0 (get-in (val %) [:stats :hp]))
+    (:people world)))
 
 ;; HACK: should be in generation.
 (defn add-locations

@@ -29,12 +29,12 @@
 
 (defn same-keys
   "Finds all maps in 'source' that have the same values as the 'template' map for each of the 'keys'."
-  [template source & keys]
+  [source template & keys]
   (filter #(= (select-keys template keys) (select-keys % keys)) source))
 
 (defn different-keys
   ;; HACK : got frustrated on this one, definitely some better solutions.
-  [template source & keys]
+  [source template & keys]
   "Finds all maps in 'source' that have NONE of the same values as the 'template' map for the 'keys'."
   (filter #(zero? (count (nth
                            (data/diff

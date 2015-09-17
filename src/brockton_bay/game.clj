@@ -1,6 +1,7 @@
 (ns brockton-bay.game
   (:require [brockton-bay.util :as util]
-            [brockton-bay.worlds :as worlds]))
+            [brockton-bay.worlds :as worlds]
+            [brockton-bay.library :as lib]))
 
 
 ;;; Game-specific functions
@@ -17,65 +18,64 @@
     world
     (keys (:locations world))))
 
-#_(defn inflict
-    ;; REVIEW: no unit tests and seen a bunch of refactorings go by, who knows if it still works.
-    "Deals damage to the person with that id, taking armour into account."
-    [damage world id]
-    {:pre [(integer? damage)
-           (world? world)
-           (seq (get-in world [:people id]))]}
-    (let [inflicted (max 1 (- damage (get-in world [:people id :stats :armour])))
-          target (get-in world [:people id])
-          outcome (update-in world [:people id :stats :hp] - inflicted)]
-      (println (str (:name target) " took " inflicted " damage."))
-      outcome))
+(defn clean-dead [world]
+  {:pre [(worlds/world? world)]}
+  (->> (worlds/get-dying-people world)
+       (keys)
+       (reduce
+         (fn [world person-id] (util/dissoc-in world [:people person-id]))
+         world
+         )))
 
-#_(defn attack-local-enemy
-    ;; REVIEW: no unit tests and seen a bunch of refactorings go by, who knows if it still works.
-    ;; HACK: can probably be made much cleaner.
-    ;; TODO: remove prints once GUI is working.
-    "Pick a random person from another faction in the same location, and damage them."
-    [world id]
-    {:pre [(world? world)
-           (seq (get-in world [:people id]))]}
-    (let [attacker (get-in world [:people id])]
-      (as->
-        (same-keys attacker (vals (:people world)) :location) $
-        (different-keys attacker $ :faction)
-        (if (empty? $)
-          world
-          (as->
-            (rand-nth $) $2
-            (do
-              (println (str "*"
-                            (:location attacker)
-                            ": "
-                            (:name attacker)
-                            " ("
-                            (:faction attacker)
-                            ") attacks "
-                            (:name $2)
-                            " ("
-                            (:faction $2)
-                            ")."))
-              $2)
-            (:id $2)
-            (inflict (:damage (:stats attacker)) world $2))))))
+(defn inflict [world damage victim-id]
+  {:pre [(worlds/world? world)
+         (number? damage)
+         (contains? (:people world) victim-id)]}
+  (let [armour (get-in world [:people victim-id :stats :armour])]
+    (update-in world
+               [:people victim-id :stats :hp]
+               -
+               (max 0 (- damage armour)))))
 
-#_(defn clean-dead
-    ;; REVIEW: no unit tests and seen a bunch of refactorings go by, who knows if it still works.
-    ;; TODO: remove prints once GUI is working.
-    "Removes all people with <= 0 HP."
-    [world]
-    {:pre [(world? world)]}
-    (let [corpse-ids (map :id (filter #(<= (:hp (:stats %)) 0) (vals (get-in world [:people]))))
-          outcome (reduce #(dissoc-in %1 [:people %2]) world corpse-ids)]
-      (print "*** Deaths: ")
-      (println (map :name (first
-                            (data/diff
-                              (set (vals (:people world)))
-                              (set (vals (:people outcome)))))))
-      outcome))
+(defn local-enemies-id [world person-id]
+  {:pre [(worlds/world? world)
+         (contains? (:people world) person-id)]}
+  (let [person (get-in world [:people person-id])]
+    (as->
+      world $
+      (:people $)
+      (filter
+        #(= (:location-id person) (:location-id (val %))) $)
+      (filter
+        #(not= (:player-id person) (:player-id (val %))) $)
+      (keys $))))
+
+(defn attack-random-local-enemy
+  "Pick a random person from another faction in the same location, and damage them."
+  [world person-id]
+  {:pre [(worlds/world? world)
+         (not (nil? person-id))]}
+  (if (zero? (count (local-enemies-id world person-id)))
+    world
+    (inflict
+      world
+      (get-in world [:people person-id :stats :damage])
+      (rand-nth (local-enemies-id world person-id)))))
+
+(defn combat-turn [world]
+  {:pre [(worlds/world? world)]}
+  (->
+    (reduce
+      attack-random-local-enemy
+      world
+      (keys (:people world)))
+    (clean-dead))
+  )
+
+(defn combat-phase [world]
+  {:pre [(worlds/world? world)]}
+  (-> (iterate combat-turn world)
+      (nth lib/nb-combat-turns)))
 
 (defn change-location [world destination-id person-id]
   {:pre [(worlds/world? world)]}
@@ -101,7 +101,7 @@
 
 (defn split-payoff [world location-id]
   {:pre [(worlds/world? world)]}
-  (let [locals-id (keys (worlds/people-at-location world location-id))]
+  (let [locals-id (keys (worlds/get-people-at-location world location-id))]
     (if (zero? (count locals-id))
       world
       (let [payoff (get-in world [:locations location-id :payoff])

@@ -7,6 +7,7 @@
 (def starting-cash 0)
 (def nb-locations 4)
 (def nb-turns 3)
+(def nb-combat-turns 5)
 
 ;;; Game defrecords (here to avoid circular dependencies)
 

@@ -25,7 +25,7 @@
                                        (val template)
                                        player-id
                                        nil))))
-  ([nb-templates world player-id]
+  ([world nb-templates player-id]
    {:pre [(worlds/world? world)]}
    (reduce add-templates world (repeat nb-templates player-id))
     ))
@@ -34,7 +34,7 @@
   [world nb-templates]
   {:pre [(worlds/world? world)]}
   (reduce
-    (partial add-templates nb-templates)
+    #(add-templates %1 nb-templates %2)
     world (keys (:players world))))
 
 (defn generate [human-names nb-ais]

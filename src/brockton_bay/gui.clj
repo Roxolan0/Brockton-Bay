@@ -126,7 +126,7 @@
   {:pre [(worlds/world? world)
          (frame? frame)]}
   (loop [cur-world world]
-    (if (zero? (count (worlds/people-without-location cur-world)))
+    (if (zero? (count (worlds/get-people-without-location cur-world)))
       cur-world
       (recur (distribute-person
                cur-world
@@ -134,20 +134,7 @@
                (key
                  (apply min-key
                         #(:speed (:stats (val %)))
-                        (worlds/people-without-location cur-world)))))))
-  #_(->> world
-         (:people)
-
-
-         (sort-by #(:speed (:stats (val %))))
-         (map :id)
-         (reduce #(distribute-person %1 frame %2) world)
-         ; while there are people without a location
-         ;; find person with lowest speed
-         ;; ask owner where to put it
-         ;; while there's two factions without a relationship
-         ;;; establish relationship
-         ))
+                        (worlds/get-people-without-location cur-world))))))))
 
 (defn game-turn [world frame]
   {:pre [(worlds/world? world)]}
@@ -160,7 +147,7 @@
         (distribute-people $ frame)
         ; TODO: AIs' people should be distributed automatically.
         ; TODO: (low priority) manage player relationships
-        ; TODO: For each location, call something to do combat.
+        (game/combat-phase $)
         (game/split-payoffs $)
         (game/clear-people-locations $)
         )
