@@ -2,68 +2,43 @@
   (require [seesaw.core :refer :all]
            [brockton-bay.game :as game]
            [brockton-bay.library :as lib]
-           [brockton-bay.util :as util]
            [brockton-bay.worlds :as worlds]
-           [brockton-bay.generation :as generation]
-           [brockton-bay.players :as players]))
+           [brockton-bay.generation :as generation]))
 
 ;;;; TODO: validate all inputs, and get rid of the "Cancel" button.
 
 ;;; UI constants. TODO: put all visible strings in here.
 
 (def game-title "Brockton Bay")
+(def question-nb-humans "How many human players?")
+(def question-nb-ais "How many AIs?")
 
 ;;; Flexible GUI functions.
 
 (defn frame? [x] (instance? javax.swing.JFrame x))
 
-(defn display [fr content]
-  {:pre [(frame? fr)]}
-  (config! fr :content content)
-  (pack! fr)
+(defn display [frame content]
+  {:pre [(frame? frame)]}
+  (config! frame :content content)
+  (pack! frame)
   content)
 
 (defn ask
-  ([fr message]
-   {:pre [(frame? fr)]}
-   (input fr message))
-  ([fr message options]
-   {:pre [(frame? fr)
+  ([frame question]
+   {:pre [(frame? frame)]}
+   (input frame question))
+  ([frame message options]
+   {:pre [(frame? frame)
           (seq options)]}                                   ;false if options is nil or empty
-   (input fr message :choices options))
+   (input frame message :choices options))
   )
 
-;;; Game-specific GUI functions
+(defn ask-number [frame question]
+  {:pre [(frame? frame)]}
+  (-> (ask frame question)
+      (Integer/parseInt)))
 
-(defn ask-new-player [world fr player-number]
-  {:pre [(worlds/world? world)
-         (frame? fr)
-         (number? player-number)]}
-  (as->
-    (ask fr (str "Player " player-number ", what do you want to call your faction?")) $
-    (players/->Player $ true lib/starting-cash)
-    (util/add-with-id world :players $))
-  )
-
-(defn ask-nb-humans [world fr]
-  {:pre [(worlds/world? world)
-         (frame? fr)]}
-  (->>
-    (ask fr "How many human players?")
-    (Integer/parseInt)
-    (inc)
-    (range 1)
-    (reduce #(ask-new-player %1 fr %2) world)
-    ))
-
-(defn ask-nb-ais [world fr]
-  {:pre [(worlds/world? world)
-         (frame? fr)]}
-  (->>
-    (ask fr "How many AI players?")
-    (Integer/parseInt)
-    (generation/add-ai-players world lib/starting-cash)
-    ))
+;;; GUI elements
 
 (defn area-location [world location-id]
   {:pre [(worlds/world? world)]}
@@ -86,22 +61,53 @@
   {:pre [(worlds/world? world)]}
   (text :text (str (worlds/get-players-cash world))))
 
-(defn state-of-the-world [world fr]
+(defn state-of-the-world [world frame]
   {:pre [(worlds/world? world)
-         (frame? fr)]}
+         (frame? frame)]}
   (do
     (display
-      fr
+      frame
       (top-bottom-split
         (area-score world)
         (area-locations world)))
-    (pack! fr)))
+    (pack! frame)))
+
+;;; GUI-player interactions
+
+(defn ask-human-name [frame player-number]
+  {:pre [(frame? frame)
+         (number? player-number)]}
+  (ask frame (str "Player " player-number ", what do you want to call your faction?")))
+
+(defn ask-human-names [frame nb-players]
+  {:pre [(frame? frame)
+         (number? nb-players)]}
+  (map (partial ask-human-name frame) (range 1 (inc nb-players))))
+
+#_(defn ask-new-player [world frame player-number]
+    {:pre [(worlds/world? world)
+           (frame? frame)
+           (number? player-number)]}
+    (as->
+      (ask frame (str "Player " player-number ", what do you want to call your faction?")) $
+      (players/->Player $ true lib/starting-cash)
+      (util/add-with-id world :players $))
+    )
+
+#_(defn ask-nb-ais [world frame]
+    {:pre [(worlds/world? world)
+           (frame? frame)]}
+    (->>
+      (ask frame "How many AI players?")
+      (Integer/parseInt)
+      (generation/add-ai-players world lib/starting-cash)
+      ))
 
 ;;; The big gameplay functions
 
-(defn distribute-person [world fr person-id]
+(defn distribute-person [world frame person-id]
   {:pre [(worlds/world? world)
-         (frame? fr)]}
+         (frame? frame)]}
   (let [person (get-in world [:people person-id])
         player (get-in world [:players (:player-id person)])
         question (str
@@ -109,72 +115,98 @@
                    (:name player)
                    " want to put "
                    (:name person)
-                   " "
-                   (:stats person)
                    "?")
         options (keys (:locations world))                   ; TODO: turn into names to ask, and then back
         ]
-    (do
-      (ask fr question options)
-      ;(game/change-location )                               ; TODO: make it work
-      world                                                 ; TODO: remove
-      )))
+    (as->
+      (ask frame question options) $
+      (game/change-location world $ person-id))))
 
-(defn distribute-people [world fr]
-  ;; HACK: should be more like a While (what if placing a person affected other people's speed or location?)
+(defn distribute-people [world frame]
   {:pre [(worlds/world? world)
-         (frame? fr)]}
-  (->> world
-       (:people)
-       (sort-by #(:speed (:stats (val %))))
-       (map :id)
-       (reduce #(distribute-person %1 fr %2) world)
-       ; while there are people without a location
-       ;; find person with lowest speed
-       ;; ask owner where to put it
-       ;; while there's two factions without a relationship
-       ;;; establish relationship
-       ))
+         (frame? frame)]}
+  (loop [cur-world world]
+    (if (zero? (count (worlds/people-without-location cur-world)))
+      cur-world
+      (recur (distribute-person
+               cur-world
+               frame
+               (key
+                 (apply min-key
+                        #(:speed (:stats (val %)))
+                        (worlds/people-without-location cur-world)))))))
+  #_(->> world
+         (:people)
 
-(defn game-turn [world fr]
+
+         (sort-by #(:speed (:stats (val %))))
+         (map :id)
+         (reduce #(distribute-person %1 frame %2) world)
+         ; while there are people without a location
+         ;; find person with lowest speed
+         ;; ask owner where to put it
+         ;; while there's two factions without a relationship
+         ;;; establish relationship
+         ))
+
+(defn game-turn [world frame]
   {:pre [(worlds/world? world)]}
   (as-> world $
         (update $ :turn-count inc)
         (game/assign-payoffs $)
-        (do (state-of-the-world $ fr)
-            (Thread/sleep 5000)                             ;; TODO: delete this
+        (do (state-of-the-world $ frame)
+            (Thread/sleep 1000)                             ; TODO: remove
             $)
-        (distribute-people $ fr)
+        (distribute-people $ frame)
+        ; TODO: Call something to distribute all People
+        ; TODO: For each location, call something to do combat
+        (game/clear-people-locations $)
         )
-  ; TODO: Call something to distribute all People
-  ; TODO: For each location, call something to do combat
   )
 
-(defn show-score [world fr]
+(defn show-score [world frame]
   (->>
     (worlds/get-players-cash world)
     (str "Score: \n")
     (text :multi-line? true :text)
     (scrollable)
-    (display fr))
-  (pack! fr)
+    (display frame))
+  (pack! frame)
   )
+
+(defn play [world frame]
+  {:pre [(worlds/world? world)
+         (frame? frame)]}
+  (as-> world $
+        (iterate #(game-turn % frame) $)
+        (nth $ lib/nb-turns)))
 
 (defn -main
   "Entry point to play the game as a whole."
   []
-  (let [fr (frame :title game-title)
-        world (worlds/empty-world)]
+  (let [frame (frame :title game-title)]
     (native!)
-    (-> fr pack! show!)
-    (display fr "PLACEHOLDER LOADING MESSAGE")
-    (as->
-      (ask-nb-humans world fr) $
-      (ask-nb-ais $ fr)
-      (generation/add-templates-to-everyone $ lib/people-per-faction)
-      (worlds/add-locations $ lib/nb-locations)
-      (iterate #(game-turn % fr) $)
-      (nth $ lib/nb-turns)
-      (do (show-score $ fr)
-          $)
-      )))
+    (-> frame pack! show!)
+    (display frame "PLACEHOLDER LOADING MESSAGE")
+    (->
+      (generation/generate
+        (ask-human-names frame (ask-number frame question-nb-humans))
+        (ask-number frame question-nb-ais)
+        )
+      (play frame)
+      (#(do
+         (show-score % frame)
+         %))
+      )
+
+    #_(as->
+        (ask-nb-humans world frame) $
+        (ask-nb-ais $ frame)
+        (generation/add-templates-to-everyone $ lib/people-per-faction)
+        (worlds/add-locations $ lib/nb-locations)
+        (iterate #(game-turn % frame) $)
+        (nth $ lib/nb-turns)
+        (do (show-score $ frame)
+            $)
+        )
+    ))

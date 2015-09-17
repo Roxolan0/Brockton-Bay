@@ -22,12 +22,13 @@
                {:a 1 :b 2 :c 4}
                {:a 4 :b 2 :c 3})))
 
-(facts "About different-keys."
+(facts "different-keys."
        (let [template {:a 1 :b 2 :c 3}
              source [{:a 2 :b 1 :c 3}
                      {:a 1 :b 2 :c 4}
                      {:a 4 :b 2 :c 3}]]
 
+         (fact "PLACEHOLDER")                               ; HACK
          (util/different-keys template source :a)
          => '({:a 2 :b 1 :c 3} {:a 4 :b 2 :c 3})
 

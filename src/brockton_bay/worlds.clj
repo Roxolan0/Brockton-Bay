@@ -11,7 +11,7 @@
 
 (defn world? [x] (instance? World x))
 
-(defn empty-world []
+(def empty-world
   (->World {} {} {} 0))
 
 (defn get-players-cash [world]
@@ -21,7 +21,13 @@
     (map :cash (vals (:players world))))
   )
 
-;; HACK: the add- should be just one generic function.
+(defn people-without-location [world]
+  {:pre [(world? world)]}
+  (filter
+    #(nil? (:location-id (val %)))
+    (:people world)))
+
+;; HACK: should be in generation.
 (defn add-locations
   "Pick some random locations from library and add them to the world."
   [world nb-locations]
