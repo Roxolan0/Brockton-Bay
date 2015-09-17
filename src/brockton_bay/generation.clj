@@ -46,6 +46,6 @@
       $
       human-names)
     (add-ai-players $ lib/starting-cash nb-ais)
-    (add-templates-to-everyone $ lib/people-per-faction)
+    (add-templates-to-everyone $ lib/people-per-player)
     (worlds/add-locations $ lib/nb-locations)
     ))

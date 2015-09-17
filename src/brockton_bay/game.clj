@@ -89,6 +89,29 @@
     world
     (keys (:people world))))
 
-;;; Test stuff, HACK: remove
+(defn give-money [world amount player-id]
+  {:pre [(worlds/world? world)
+         (number? amount)]}
+  (update-in world [:players player-id :cash] + amount))
 
-;; (clojure.stacktrace/print-stack-trace *e 5)
+(defn give-money-via-person [world amount person-id]
+  {:pre [(worlds/world? world)
+         (number? amount)]}
+  (give-money world amount (get-in world [:people person-id :player-id])))
+
+(defn split-payoff [world location-id]
+  {:pre [(worlds/world? world)]}
+  (let [locals-id (keys (worlds/people-at-location world location-id))]
+    (if (zero? (count locals-id))
+      world
+      (let [payoff (get-in world [:locations location-id :payoff])
+            share (int (/ payoff (count locals-id)))
+            remainder (rem payoff (count locals-id))]
+        (->
+          (reduce #(give-money-via-person %1 share %2) world locals-id)
+          (assoc-in [:locations location-id :payoff] remainder)))))
+  )
+
+(defn split-payoffs [world]
+  {:pre [(worlds/world? world)]}
+  (reduce split-payoff world (keys (:locations world))))

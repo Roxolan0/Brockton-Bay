@@ -158,8 +158,10 @@
             (Thread/sleep 1000)                             ; TODO: remove
             $)
         (distribute-people $ frame)
-        ; TODO: Call something to distribute all People
-        ; TODO: For each location, call something to do combat
+        ; TODO: AIs' people should be distributed automatically.
+        ; TODO: (low priority) manage player relationships
+        ; TODO: For each location, call something to do combat.
+        (game/split-payoffs $)
         (game/clear-people-locations $)
         )
   )
@@ -197,16 +199,4 @@
       (#(do
          (show-score % frame)
          %))
-      )
-
-    #_(as->
-        (ask-nb-humans world frame) $
-        (ask-nb-ais $ frame)
-        (generation/add-templates-to-everyone $ lib/people-per-faction)
-        (worlds/add-locations $ lib/nb-locations)
-        (iterate #(game-turn % frame) $)
-        (nth $ lib/nb-turns)
-        (do (show-score $ frame)
-            $)
-        )
-    ))
+      )))

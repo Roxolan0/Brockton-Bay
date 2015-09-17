@@ -3,7 +3,7 @@
 
 ;;; Game constants
 
-(def people-per-faction 6)
+(def people-per-player 6)
 (def starting-cash 0)
 (def nb-locations 4)
 (def nb-turns 3)
@@ -23,11 +23,6 @@
    "Bank robbery"
    "Mercenary work"
    "Kidnapping"])
-;(map (partial apply ->Location)
-;     [[(UUID/randomUUID) "Drug trade" 0]
-;      [(UUID/randomUUID) "Bank robbery" 0]
-;      [(UUID/randomUUID) "Mercenary work" 0]
-;      [(UUID/randomUUID) "Kidnapping" 0]]))
 
 (def ai-names
   ["The Azian Bad Boys"
