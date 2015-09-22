@@ -3,7 +3,9 @@
            [brockton-bay.game :as game]
            [brockton-bay.library :as lib]
            [brockton-bay.worlds :as worlds]
-           [brockton-bay.generation :as generation]))
+           [brockton-bay.generation :as generation]
+           [om.core :as om :include-macros true]
+           [om.dom :as dom :include-macros true]))
 
 ;;;; TODO: validate all inputs, and get rid of the "Cancel" button.
 
@@ -27,10 +29,18 @@
   ([frame question]
    {:pre [(frame? frame)]}
    (input frame question))
-  ([frame message options]
+  ([frame question options]
    {:pre [(frame? frame)
-          (seq options)]}                                   ;false if options is nil or empty
-   (input frame message :choices options))
+          (seq options)]}
+   (input frame question :choices options))
+  )
+
+(defn ask-with-id [frame question options-map]
+  {:pre [(frame? frame)
+         (map? options-map)
+         (seq options-map)]}
+  (input frame question :choices options-map)
+  ;; TODO continue work from here
   )
 
 (defn ask-number [frame question]
@@ -83,25 +93,6 @@
   {:pre [(frame? frame)
          (number? nb-players)]}
   (map (partial ask-human-name frame) (range 1 (inc nb-players))))
-
-#_(defn ask-new-player [world frame player-number]
-    {:pre [(worlds/world? world)
-           (frame? frame)
-           (number? player-number)]}
-    (as->
-      (ask frame (str "Player " player-number ", what do you want to call your faction?")) $
-      (players/->Player $ true lib/starting-cash)
-      (util/add-with-id world :players $))
-    )
-
-#_(defn ask-nb-ais [world frame]
-    {:pre [(worlds/world? world)
-           (frame? frame)]}
-    (->>
-      (ask frame "How many AI players?")
-      (Integer/parseInt)
-      (generation/add-ai-players world lib/starting-cash)
-      ))
 
 ;;; The big gameplay functions
 

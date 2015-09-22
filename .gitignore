@@ -12,3 +12,6 @@ pom.xml.asc
 .idea
 *.iml
 default-properties.json
+/resources/public/js
+/out
+/.repl
