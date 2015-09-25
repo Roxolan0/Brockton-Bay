@@ -10,3 +10,8 @@ pom.xml.asc
 /resources/public/js
 /out
 /.repl
+/deploy
+.#*
+.idea
+*.iml
+default-properties.json
