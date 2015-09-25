@@ -27,7 +27,7 @@ page.open(url, function (status) {
   console.log("Running test.");
 
   var result = page.evaluate(function() {
-    return brockton-bay.test_runner.runner();
+    return brockton_bay.test_runner.runner();
   });
 
   if (result != 0) {
