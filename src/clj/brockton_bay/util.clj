@@ -49,3 +49,8 @@
    (update-in destination [submap] conj {id source}))
   ([destination submap source]
    (add-with-id destination submap (UUID/randomUUID) source)))
+
+(defn contains-many?
+  "Returns true if all keys are present in the given collection, otherwise returns false."
+  [col & keys]
+  (every? true? (map #(contains? col %) keys)))

@@ -2,4 +2,5 @@
 
 (defrecord Location
   [name
-   ^long payoff])
+   ^long payoff
+   agreements])

@@ -92,9 +92,9 @@
          (number? nb-players)]}
   (map (partial ask-human-name frame) (range 1 (inc nb-players))))
 
-;;; The big gameplay functions
-
-(defn distribute-person [world frame person-id]
+(defn ask-to-move
+  "Returns the chosen location-id."
+  [world frame person-id]
   {:pre [(worlds/world? world)
          (frame? frame)]}
   (let [person (get-in world [:people person-id])
@@ -105,11 +105,28 @@
                    " want to put "
                    (:name person)
                    "?")
-        options (keys (:locations world))                   ; TODO: turn into names to ask, and then back
-        ]
-    (as->
-      (ask frame question options) $
-      (game/change-location world $ person-id))))
+        options (keys (:locations world))]                  ; TODO turn into names to ask, and then back
+    (ask frame question options)))
+
+;;; The big gameplay functions
+
+(defn make-agreements [world frame person-id]
+  {:pre [(worlds/world? world)
+         (frame? frame)]}
+  (let [location-id (get-in world [:people person-id :location-id])
+        player-id (get-in world [:people person-id :player-id])]
+    ;get other players at that location
+    ;for each of them, do (util/contains-many? that-player player-id)
+    ;if no, call (make-agreement world frame location-id that-player player-id)
+    world))                                                       ; TODO
+
+(defn distribute-person [world frame person-id]
+  {:pre [(worlds/world? world)
+         (frame? frame)]}
+  (as->
+    (ask-to-move world frame person-id) $
+    (game/change-location world $ person-id)
+    (make-agreements $ frame person-id)))
 
 (defn distribute-people [world frame]
   {:pre [(worlds/world? world)

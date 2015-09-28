@@ -79,8 +79,7 @@
 
 (defn change-location [world destination-id person-id]
   {:pre [(worlds/world? world)]}
-  (assoc-in world [:people person-id :location-id] destination-id)
-  )
+  (assoc-in world [:people person-id :location-id] destination-id))
 
 (defn clear-people-locations [world]
   {:pre [(worlds/world? world)]}
