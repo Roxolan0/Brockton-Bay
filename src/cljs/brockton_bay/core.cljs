@@ -1,11 +1,7 @@
 (ns brockton-bay.core
   (:require
             [om.core :as om :include-macros true]
-            [om.dom :as dom :include-macros true]
-            [brockton-bay.game :as game]
-            [brockton-bay.library :as lib]
-            [brockton-bay.worlds :as worlds]
-            [brockton-bay.generation :as generation]))
+            [om.dom :as dom :include-macros true]))
 
 (enable-console-print!)
 

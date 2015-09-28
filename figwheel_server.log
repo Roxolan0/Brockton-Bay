@@ -149,3 +149,17 @@ notifying browser that file changed:  resources/public/js/app.js
 notifying browser that file changed:  resources/public/js/out/goog/deps.js
 notifying browser that file changed:  /brockton_bay/main.js
 notifying browser that file changed:  /brockton_bay/core.js
+Figwheel: focusing on build-ids (app)
+[0mCompiling "resources/public/js/app.js" from ["src/cljs" "env/dev/cljs"]...
+[32mSuccessfully compiled "resources/public/js/app.js" in 0.108 seconds.[0m
+notifying browser that file changed:  resources/public/js/app.js
+notifying browser that file changed:  resources/public/js/out/goog/deps.js
+notifying browser that file changed:  /brockton_bay/main.js
+notifying browser that file changed:  /brockton_bay/core.js
+Figwheel: focusing on build-ids (app)
+[0mCompiling "resources/public/js/app.js" from ["src/cljs" "env/dev/cljs"]...
+[32mSuccessfully compiled "resources/public/js/app.js" in 0.106 seconds.[0m
+notifying browser that file changed:  resources/public/js/app.js
+notifying browser that file changed:  resources/public/js/out/goog/deps.js
+notifying browser that file changed:  /brockton_bay/main.js
+notifying browser that file changed:  /brockton_bay/core.js

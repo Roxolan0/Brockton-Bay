@@ -3,9 +3,7 @@
            [brockton-bay.game :as game]
            [brockton-bay.library :as lib]
            [brockton-bay.worlds :as worlds]
-           [brockton-bay.generation :as generation]
-           [om.core :as om :include-macros true]
-           [om.dom :as dom :include-macros true]))
+           [brockton-bay.generation :as generation]))
 
 ;;;; TODO: validate all inputs, and get rid of the "Cancel" button.
 

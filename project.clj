@@ -1,9 +1,9 @@
 (defproject brockton-bay "0.1.0"
   :main brockton-bay.gui
 
-  :source-paths ["src/cljs"]
+  :source-paths ["src/cljs" "src/clj"]
 
-  :test-paths ["test/cljs"]
+  :test-paths ["test/cljs" "test/clj"]
 
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [org.clojure/clojurescript "1.7.48" :scope "provided"]
