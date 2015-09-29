@@ -10,7 +10,7 @@
   {:pre [(worlds/world? world)
          (number? nb-ais)]}
   (let [names (take nb-ais (shuffle lib/ai-names))]
-    (reduce #(util/add-with-id %1 :players (players/->Player %2 false cash))
+    (reduce #(util/add-with-id %1 [:players] (players/->Player %2 false cash))
             world
             names)))
 
@@ -20,7 +20,7 @@
   ([world player-id]
    {:pre [(worlds/world? world)]}
    (let [template (rand-nth (seq lib/people-templates))]
-     (util/add-with-id world :people (people/->Person
+     (util/add-with-id world [:people] (people/->Person
                                        (key template)
                                        (val template)
                                        player-id
@@ -42,7 +42,7 @@
   (as->
     worlds/empty-world $
     (reduce
-      #(util/add-with-id %1 :players (players/->Player %2 true lib/starting-cash))
+      #(util/add-with-id %1 [:players] (players/->Player %2 true lib/starting-cash))
       $
       human-names)
     (add-ai-players $ lib/starting-cash nb-ais)

@@ -52,10 +52,10 @@
         player1 {:name "Player 1"}
         player2 {:name "Player 2"}]
 
-    (util/add-with-id original :players "some-id" player1)
+    (util/add-with-id original [:players] "some-id" player1)
     => {:players {"some-id" player1}}
 
-    (-> (util/add-with-id original :players "player-1-id" player1)
-        (util/add-with-id :players "player-2-id" player2))
+    (-> (util/add-with-id original [:players] "player-1-id" player1)
+        (util/add-with-id [:players] "player-2-id" player2))
     => {:players {"player-1-id" player1
                   "player-2-id" player2}}))

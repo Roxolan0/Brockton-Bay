@@ -1,7 +1,8 @@
 (ns brockton-bay.worlds
   (:require [brockton-bay.util :as util]
             [brockton-bay.library :as lib]
-            [brockton-bay.locations :as locations]))
+            [brockton-bay.locations :as locations]
+            [brockton-bay.agreements :as agreements]))
 
 (defrecord World
   [players
@@ -37,6 +38,14 @@
     #(>= 0 (get-in (val %) [:stats :hp]))
     (:people world)))
 
+(defn get-players-ids-at-location [world location-id]
+  {:pre [(world? world)]}
+  (->>
+    (get-people-at-location world location-id)
+    (vals)
+    (map :player-id)
+    (distinct)))
+
 ;; HACK: should be in generation.
 (defn add-locations
   "Pick some random locations from library and add them to the world."
@@ -46,7 +55,7 @@
   (->> lib/location-names
        (shuffle)
        (take nb-locations)
-       (reduce #(util/add-with-id %1 :locations (locations/->Location %2 0 [])) world)))
+       (reduce #(util/add-with-id %1 [:locations] (locations/->Location %2 0 [])) world)))
 
 (defn agreement? [world location-id player1-id player2-id]
   {:pre [(world? world)]}
@@ -55,3 +64,10 @@
     (filter #(util/contains-many? % player1-id player2-id))
     (empty?)
     (not)))
+
+#_(defn add-agreement [world location-id player1-id player2-id content]
+  {:pre [(world? world)]}
+  (util/add-with-id
+    world
+    [:locations location-id :agreements]
+    (agreements/->Agreement [player1-id player2-id] content)))

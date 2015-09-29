@@ -45,10 +45,10 @@
 
 (defn add-with-id
   "Add the source to the destination sub-map, indexed by an id (provided or generated)."
-  ([destination submap id source]
-   (update-in destination [submap] conj {id source}))
-  ([destination submap source]
-   (add-with-id destination submap (UUID/randomUUID) source)))
+  ([destination submap-vector id source]
+   (update-in destination submap-vector conj {id source}))
+  ([destination submap-vector source]
+   (add-with-id destination submap-vector (UUID/randomUUID) source)))
 
 (defn contains-many?
   "Returns true if all keys are present in the given collection, otherwise returns false."

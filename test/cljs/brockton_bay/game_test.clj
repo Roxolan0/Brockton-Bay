@@ -40,65 +40,69 @@
 
 (facts "inflict"
   (fact "Lowers HP of the unarmoured."
-        (as-> worlds/empty-world $
-              (util/add-with-id $ :people "x" (people/->Person
-                                            nil
-                                            (lib/->Person-stats 0 0 0 10)
-                                            nil
-                                            nil))
-              (game/inflict $ 4 "x")
-              (get-in $ [:people "x" :stats :hp]))
+        (as->
+          worlds/empty-world $
+          (util/add-with-id $ [:people] "x" (people/->Person
+                                              nil
+                                              (lib/->Person-stats 0 0 0 10)
+                                              nil
+                                              nil))
+          (game/inflict $ 4 "x")
+          (get-in $ [:people "x" :stats :hp]))
         => 6)
   (fact "Partly lowers HP of the armoured."
-                   (as-> worlds/empty-world $
-                         (util/add-with-id $ :people "x" (people/->Person
-                                                           nil
-                                                           (lib/->Person-stats 0 0 3 10)
-                                                           nil
-                                                           nil))
-                         (game/inflict $ 4 "x")
-                         (get-in $ [:people "x" :stats :hp]))
-                   => 9)
+        (as->
+          worlds/empty-world $
+          (util/add-with-id $ [:people] "x" (people/->Person
+                                              nil
+                                              (lib/->Person-stats 0 0 3 10)
+                                              nil
+                                              nil))
+          (game/inflict $ 4 "x")
+          (get-in $ [:people "x" :stats :hp]))
+        => 9)
   (fact "Doesn't change HP of the well-armoured."
-        (as-> worlds/empty-world $
-              (util/add-with-id $ :people "x" (people/->Person
-                                                nil
-                                                (lib/->Person-stats 0 0 10 10)
-                                                nil
-                                                nil))
-              (game/inflict $ 4 "x")
-              (get-in $ [:people "x" :stats :hp]))
+        (as->
+          worlds/empty-world $
+          (util/add-with-id $ [:people] "x" (people/->Person
+                                              nil
+                                              (lib/->Person-stats 0 0 10 10)
+                                              nil
+                                              nil))
+          (game/inflict $ 4 "x")
+          (get-in $ [:people "x" :stats :hp]))
         => 10)
   )
 
 (facts "attack-random-local-enemy"
   (fact "Attacks the enemy in the same location (and no-one else)."
-        (as-> worlds/empty-world $
-              (util/add-with-id $ :people "x" (people/->Person
-                                                nil
-                                                (lib/->Person-stats 0 1 0 10)
-                                                "blue"
-                                                "bank"))
-              (util/add-with-id $ :people "y" (people/->Person
-                                                nil
-                                                (lib/->Person-stats 0 1 0 10)
-                                                "red"
-                                                "bank"))
-              (util/add-with-id $ :people "z" (people/->Person
-                                                nil
-                                                (lib/->Person-stats 0 1 0 10)
-                                                "blue"
-                                                "bank"))
-              (util/add-with-id $ :people "t" (people/->Person
-                                                nil
-                                                (lib/->Person-stats 0 1 0 10)
-                                                "red"
-                                                "volcano"))
-              (game/attack-random-local-enemy $ "x")
-              (:people $)
-              (vals $)
-              (map :stats $)
-              (map :hp $))
+        (as->
+          worlds/empty-world $
+          (util/add-with-id $ [:people] "x" (people/->Person
+                                              nil
+                                              (lib/->Person-stats 0 1 0 10)
+                                              "blue"
+                                              "bank"))
+          (util/add-with-id $ [:people] "y" (people/->Person
+                                              nil
+                                              (lib/->Person-stats 0 1 0 10)
+                                              "red"
+                                              "bank"))
+          (util/add-with-id $ [:people] "z" (people/->Person
+                                              nil
+                                              (lib/->Person-stats 0 1 0 10)
+                                              "blue"
+                                              "bank"))
+          (util/add-with-id $ [:people] "t" (people/->Person
+                                              nil
+                                              (lib/->Person-stats 0 1 0 10)
+                                              "red"
+                                              "volcano"))
+          (game/attack-random-local-enemy $ "x")
+          (:people $)
+          (vals $)
+          (map :stats $)
+          (map :hp $))
         => '(10 9 10 10)))
 
 ;(facts "combat-turn"
