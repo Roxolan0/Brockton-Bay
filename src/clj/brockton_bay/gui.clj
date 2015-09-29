@@ -3,7 +3,9 @@
            [brockton-bay.game :as game]
            [brockton-bay.library :as lib]
            [brockton-bay.worlds :as worlds]
-           [brockton-bay.generation :as generation]))
+           [brockton-bay.generation :as generation]
+           [brockton-bay.util :as util]
+           [brockton-bay.agreements :as agreements]))
 
 ;;;; TODO: validate all inputs, and get rid of the "Cancel" button.
 
@@ -108,17 +110,70 @@
         options (keys (:locations world))]                  ; TODO turn into names to ask, and then back
     (ask frame question options)))
 
+(defn ask-agreement
+  "Returns the chosen agreement between the two players."
+  [world frame location-id asked-player-id other-player-id options]
+  {:pre [(worlds/world? world)
+         (frame? frame)]}
+  (let [asked-player (get-in world [:players asked-player-id])
+        other-player (get-in world [:players other-player-id])
+        location (get-in world [:locations] location-id)
+        question (str
+                   (:name asked-player)
+                   ": What are you going to do about "
+                   (:name other-player)
+                   "'s presence at "
+                   (:name location)
+                   "?")]
+    (ask frame question options)))
+
+(defn ask-agreement-from-both
+  "Asks the slower player, then the faster player, what agreement they want, and returns the resulting agreement."
+  [world frame location-id slower-player-id faster-player-id]
+  {:pre [(worlds/world? world)
+         (frame? frame)
+         (contains? (:players world) slower-player-id)
+         (contains? (:players world) faster-player-id)]}
+  (let [slower-choice (ask-agreement world frame location-id
+                                     slower-player-id
+                                     faster-player-id
+                                     (agreements/agreement-options))
+        faster-choice (ask-agreement world frame location-id
+                                     faster-player-id
+                                     slower-player-id
+                                     (agreements/agreement-options slower-choice))]
+    (agreements/->Agreement
+      {slower-player-id slower-choice faster-player-id faster-choice})))
+
 ;;; The big gameplay functions
+
+(defn make-agreement [world frame location-id slower-player-id faster-player-id]
+  {:pre [(worlds/world? world)
+         (frame? frame)]}
+  (as->
+    (get-in world [:locations location-id :agreements]) $
+    (some #(util/contains-many? % slower-player-id faster-player-id) $)
+    (if $
+      world
+      (util/add-with-id
+        world
+        [:locations location-id :agreements]
+        (ask-agreement-from-both world frame location-id
+                                 slower-player-id
+                                 faster-player-id)))))
 
 (defn make-agreements [world frame person-id]
   {:pre [(worlds/world? world)
          (frame? frame)]}
   (let [location-id (get-in world [:people person-id :location-id])
         player-id (get-in world [:people person-id :player-id])]
-    ;get other players at that location
-    ;for each of them, do (util/contains-many? that-player player-id)
-    ;if no, call (make-agreement world frame location-id that-player player-id)
-    world))                                                       ; TODO
+    (as->
+      (worlds/get-players-ids-at-location world location-id) $
+      (remove #(= player-id %) $)
+      (reduce
+        (fn [a-world a-player-id] (make-agreement a-world frame location-id player-id a-player-id))
+        world
+        $))))
 
 (defn distribute-person [world frame person-id]
   {:pre [(worlds/world? world)
