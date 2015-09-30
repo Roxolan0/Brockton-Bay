@@ -74,9 +74,10 @@ Very early prototype of a superhero management game in Clojure.
 --- Scrollable
 --- Get the Ask windows out of the way
 --- Some kind of log, especially for combat
-- Make the AI be an AI
---- Choose location to place character.
---- Choose SHARE/FIGHT/FLEE
+
+V Make the AI be an AI
+V-- Choose location to place character.
+V-- Choose SHARE/FIGHT/FLEE
 
 {OLD}
 @Plays-itself main game loop

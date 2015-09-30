@@ -136,7 +136,9 @@
                    (:name person)
                    "?")
         options (keys (:locations world))]                  ; TODO turn into names to ask, and then back
-    (ask frame question options)))
+    (if (:is-human player)
+      (ask frame question options)
+      (rand-nth options))))
 
 (defn ask-agreement
   "Returns the chosen agreement between the two players."
@@ -153,7 +155,9 @@
                    "'s presence at "
                    (:name location)
                    "?")]
-    (ask frame question options)))
+    (if (:is-human asked-player)
+      (ask frame question options)
+      (rand-nth options))))
 
 (defn ask-agreement-from-both
   "Asks the slower player, then the faster player, what agreement they want, and returns the resulting agreement."
@@ -179,17 +183,14 @@
 (defn make-agreement [world frame location-id slower-player-id faster-player-id]
   {:pre [(worlds/world? world)
          (frame? frame)]}
-  (as->
-    (get-in world [:locations location-id :agreements]) $
-    (some #(util/contains-many? % slower-player-id faster-player-id) $)
-    (if $
+  (if (worlds/agreement? world location-id slower-player-id faster-player-id)
+    world
+    (util/add-with-id
       world
-      (util/add-with-id
-        world
-        [:locations location-id :agreements]
-        (ask-agreement-from-both world frame location-id
-                                 slower-player-id
-                                 faster-player-id)))))
+      [:locations location-id :agreements]
+      (ask-agreement-from-both world frame location-id
+                               slower-player-id
+                               faster-player-id))))
 
 (defn make-agreements [world frame person-id]
   {:pre [(worlds/world? world)
@@ -238,8 +239,6 @@
             (Thread/sleep 1000)                             ; TODO: remove
             $)
         (distribute-people $ frame)
-        ; TODO: AIs' people should be distributed automatically.
-        ; TODO: (low priority) manage player relationships
         (game/combat-phase $)
         (game/split-payoffs $)
         (game/clear-people-locations $)
