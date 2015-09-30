@@ -55,12 +55,14 @@
   (->> lib/location-names
        (shuffle)
        (take nb-locations)
-       (reduce #(util/add-with-id %1 [:locations] (locations/->Location %2 0 [])) world)))
+       (reduce #(util/add-with-id %1 [:locations] (locations/->Location %2 0 {})) world)))
 
 (defn agreement? [world location-id player1-id player2-id]
   {:pre [(world? world)]}
   (->>
     (get-in world [:locations location-id :agreements])
+    (vals)
+    (map :choices-by-player-id)
     (filter #(util/contains-many? % player1-id player2-id))
     (empty?)
     (not)))

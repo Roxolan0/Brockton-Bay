@@ -90,7 +90,7 @@
 
 (defn clear-agreements-at [world location-id]
   {:pre [(worlds/world? world)]}
-  (assoc-in world [:locations location-id :agreements] nil))
+  (assoc-in world [:locations location-id :agreements] {}))
 
 (defn clear-agreements [world]
   {:pre [(worlds/world? world)]}

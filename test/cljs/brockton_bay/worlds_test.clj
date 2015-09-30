@@ -34,10 +34,14 @@
 (def test-world-with-agreements
   (->
     worlds/empty-world
-    (util/add-with-id [:locations] "bank" (locations/->Location nil 0 nil))
-    (util/add-with-id [:locations] "volcano" (locations/->Location nil 0 nil))
+    (util/add-with-id [:locations] "bank" (locations/->Location nil 0 {}))
+    (util/add-with-id [:locations] "volcano" (locations/->Location nil 0 {}))
+    (util/add-with-id [:locations] "cemetary" (locations/->Location nil 0 {}))
+    (util/add-with-id [:locations] "space" (locations/->Location nil 0 {}))
     (util/add-with-id [:locations "bank" :agreements]
                       (agreements/->Agreement {"red" :flee "blue" :flee}))
+    (util/add-with-id [:locations "bank" :agreements]
+                      (agreements/->Agreement {"red" :flee "yellow" :flee}))
     (util/add-with-id [:locations "volcano" :agreements]
                       (agreements/->Agreement {"red" :flee "yellow" :flee}))
     (util/add-with-id [:locations "volcano" :agreements]
@@ -82,9 +86,12 @@
         => 2))
 
 (facts "About agreement?."
-  (fact "Returns true if there is an agreement between the two players at that location."
+  (fact "agreement? returns true if there is an agreement between the two players at that location."
         (worlds/agreement? test-world-with-agreements "bank" "blue" "red")
         => true)
-  (fact "Returns false if there isn't an agreement between the two players at that location."
+  (fact "agreement? returns false if there isn't an agreement between the two players at that location."
         (worlds/agreement? test-world-with-agreements "volcano" "blue" "red")
+        => false)
+  (fact "agreement? returns false on a location with no agreements."
+        (worlds/agreement? test-world-with-agreements "space" "blue" "red")
         => false))
