@@ -37,45 +37,60 @@
                -
                (max 0 (- damage armour)))))
 
-(defn local-enemies-id [world person-id]
-  {:pre [(worlds/world? world)
-         (contains? (:people world) person-id)]}
-  (let [person (get-in world [:people person-id])]
-    (as->
-      world $
-      (:people $)
-      (filter
-        #(= (:location-id person) (:location-id (val %))) $)
-      (filter
-        #(not= (:player-id person) (:player-id (val %))) $)
-      (keys $))))
-
-(defn attack-random-local-enemy
+(defn attack-random-enemy-near
+  ; TODO people on a SHARE/SHARE agreement are NOT enemies
   "Pick a random person from another faction in the same location, and damage them."
   [world person-id]
   {:pre [(worlds/world? world)
-         (not (nil? person-id))]}
-  (if (zero? (count (local-enemies-id world person-id)))
+         (contains? (:people world) person-id)]}
+  (if (zero? (count (worlds/get-enemies-ids-near world person-id)))
     world
     (inflict
       world
       (get-in world [:people person-id :stats :damage])
-      (rand-nth (local-enemies-id world person-id)))))
+      (rand-nth (worlds/get-enemies-ids-near world person-id)))))
 
-(defn combat-turn [world]
+(defn fight-round [world location-id]                       ; TODO clean-dead after EACH attack
   {:pre [(worlds/world? world)]}
-  (->
-    (reduce
-      attack-random-local-enemy
+  (->> world
+       (:people)
+       (keys)
+       (filter (partial worlds/is-at? world location-id))
+       (sort (worlds/by-speed-decr world))
+       (reduce attack-random-enemy-near world)
+       (clean-dead)))
+
+(defn give-money [world amount player-id]
+  {:pre [(worlds/world? world)
+         (number? amount)]}
+  (update-in world [:players player-id :cash] + amount))
+
+(defn give-money-via-person [world amount person-id]
+  {:pre [(worlds/world? world)
+         (number? amount)]}
+  (give-money world amount (get-in world [:people person-id :player-id])))
+
+(defn flee-step [world location-id]
+  {:pre [(worlds/world? world)]}
+  world)                                                    ; TODO this is a stub
+
+(defn fight-step [world location-id]
+  {:pre [(worlds/world? world)]}
+  (-> (iterate #(fight-round % location-id) world)
+      (nth lib/nb-fight-rounds)))
+
+(defn share-step
+  [world location-id]
+  {:pre [(worlds/world? world)]}
+  (let [locals-id (keys (worlds/get-people-at world location-id))]
+    (if (zero? (count locals-id))
       world
-      (keys (:people world)))
-    (clean-dead))
-  )
-
-(defn combat-phase [world]
-  {:pre [(worlds/world? world)]}
-  (-> (iterate combat-turn world)
-      (nth lib/nb-combat-turns)))
+      (let [payoff (get-in world [:locations location-id :payoff])
+            share (int (/ payoff (count locals-id)))
+            remainder (rem payoff (count locals-id))]
+        (->
+          (reduce #(give-money-via-person %1 share %2) world locals-id)
+          (assoc-in [:locations location-id :payoff] remainder))))))
 
 (defn change-location [world destination-id person-id]
   {:pre [(worlds/world? world)]}
@@ -95,30 +110,3 @@
 (defn clear-agreements [world]
   {:pre [(worlds/world? world)]}
   (reduce clear-agreements-at world (keys (:locations world))))
-
-(defn give-money [world amount player-id]
-  {:pre [(worlds/world? world)
-         (number? amount)]}
-  (update-in world [:players player-id :cash] + amount))
-
-(defn give-money-via-person [world amount person-id]
-  {:pre [(worlds/world? world)
-         (number? amount)]}
-  (give-money world amount (get-in world [:people person-id :player-id])))
-
-(defn split-payoff [world location-id]
-  {:pre [(worlds/world? world)]}
-  (let [locals-id (keys (worlds/get-people-at-location world location-id))]
-    (if (zero? (count locals-id))
-      world
-      (let [payoff (get-in world [:locations location-id :payoff])
-            share (int (/ payoff (count locals-id)))
-            remainder (rem payoff (count locals-id))]
-        (->
-          (reduce #(give-money-via-person %1 share %2) world locals-id)
-          (assoc-in [:locations location-id :payoff] remainder)))))
-  )
-
-(defn split-payoffs [world]
-  {:pre [(worlds/world? world)]}
-  (reduce split-payoff world (keys (:locations world))))

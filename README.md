@@ -63,11 +63,13 @@ Very early prototype of a superhero management game in Clojure.
 
 
 @Current task list:
-V Fix multiple agreements bug
+- Bugfixes
+V-- Multiple agreements
+--- Missing location names in Agreement ask
 - Make SHARE/FIGHT/FLEE actually do something
 --- FLEE round
 --- FIGHT/SHARE combat bonus
---- SHARE round
+V-- SHARE round
 - Pretty up the GUI a little
 V-- Show People details
 V-- Show location names

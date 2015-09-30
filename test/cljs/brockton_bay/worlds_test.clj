@@ -12,22 +12,22 @@
     worlds/empty-world
     (util/add-with-id [:people] "x" (people/->Person
                                         "Alice"
-                                        (lib/->Person-stats 0 1 0 10)
+                                        (lib/->Person-stats 1 1 0 10)
                                         "blue"
                                         "bank"))
     (util/add-with-id [:people] "y" (people/->Person
                                         "Bob"
-                                        (lib/->Person-stats 0 1 0 10)
+                                        (lib/->Person-stats 3 1 0 10)
                                         "red"
                                         "bank"))
     (util/add-with-id [:people] "z" (people/->Person
                                         "Carol"
-                                        (lib/->Person-stats 0 1 0 10)
+                                        (lib/->Person-stats 2 1 0 10)
                                         "blue"
                                         "bank"))
     (util/add-with-id [:people] "t" (people/->Person
                                         "Dave"
-                                        (lib/->Person-stats 0 1 0 10)
+                                        (lib/->Person-stats 4 1 0 10)
                                         "green"
                                         "volcano"))))
 
@@ -61,27 +61,27 @@
 (facts "About get-people-at-location."
   (fact "Finds all people at the location (and no-one else)."
         (->>
-          (worlds/get-people-at-location test-world-with-people "bank")
+          (worlds/get-people-at test-world-with-people "bank")
           (keys)
           (flatten))
         => '("x" "y" "z"))
 
   (fact "Find each person only once."
         (->
-          (worlds/get-people-at-location test-world-with-people "bank")
+          (worlds/get-people-at test-world-with-people "bank")
           (count))
         => 3))
 
 (facts "About get-players-ids-at-location."
   (fact "Finds all players with people at the location (and no-one else)."
         (->
-          (worlds/get-players-ids-at-location test-world-with-people "bank")
+          (worlds/get-players-ids-at test-world-with-people "bank")
           (flatten))
         => '("blue" "red"))
 
   (fact "Finds each player only once."
         (->
-          (worlds/get-players-ids-at-location test-world-with-people "bank")
+          (worlds/get-players-ids-at test-world-with-people "bank")
           (count))
         => 2))
 

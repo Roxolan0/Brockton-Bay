@@ -203,7 +203,7 @@
   (let [location-id (get-in world [:people person-id :location-id])
         player-id (get-in world [:people person-id :player-id])]
     (as->
-      (worlds/get-players-ids-at-location world location-id) $
+      (worlds/get-players-ids-at world location-id) $
       (remove #(= player-id %) $)
       (reduce
         (fn [a-world a-player-id] (make-agreement a-world frame location-id player-id a-player-id)) ; TODO: should identify the slowest/fastest player.
@@ -235,6 +235,17 @@
                         #(:speed (:stats (val %)))
                         (worlds/get-people-without-location cur-world))))))))
 
+(defn battle-phase
+  ([world location-id]
+   {:pre [(worlds/world? world)]}
+   (-> world
+       (game/flee-step location-id)
+       (game/fight-step location-id)
+       (game/share-step location-id)))
+  ([world]
+   {:pre [(worlds/world? world)]}
+   (reduce battle-phase world (keys (:locations world)))))
+
 (defn game-turn [world frame]
   {:pre [(worlds/world? world)]}
   (as-> world $
@@ -244,8 +255,7 @@
             (Thread/sleep 1000)                             ; TODO: remove
             $)
         (distribute-people $ frame)
-        (game/combat-phase $)
-        (game/split-payoffs $)
+        (battle-phase $)
         (game/clear-people-locations $)
         (game/clear-agreements $)
         )

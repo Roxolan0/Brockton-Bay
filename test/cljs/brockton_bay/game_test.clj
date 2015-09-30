@@ -98,7 +98,7 @@
                                               (lib/->Person-stats 0 1 0 10)
                                               "red"
                                               "volcano"))
-          (game/attack-random-local-enemy $ "x")
+          (game/attack-random-enemy-near $ "x")
           (:people $)
           (vals $)
           (map :stats $)
