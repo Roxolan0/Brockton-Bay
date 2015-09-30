@@ -152,7 +152,7 @@
          (frame? frame)]}
   (let [asked-player (get-in world [:players asked-player-id])
         other-player (get-in world [:players other-player-id])
-        location (get-in world [:locations] location-id)
+        location (get-in world [:locations location-id])
         question (str
                    (:name asked-player)
                    ": What are you going to do about "
