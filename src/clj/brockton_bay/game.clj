@@ -62,12 +62,16 @@
   [world person-id]
   {:pre [(worlds/world? world)
          (contains? (:people world) person-id)]}
-  (if (zero? (count (worlds/get-local-enemies-ids world person-id)))
-    world
-    (inflict
+  (let [local-enemies-ids (worlds/get-local-enemies-ids world person-id)]
+    (if (zero? (count local-enemies-ids))
       world
-      (get-in world [:people person-id :stats :damage])
-      (rand-nth (worlds/get-local-enemies-ids world person-id)))))
+      (let [damage (get-in world [:people person-id :stats :damage])
+            target-id (rand-nth local-enemies-ids)
+            betrayal-damage (worlds/get-betrayal-damage world person-id target-id)]
+        (inflict
+          world
+          (+ damage betrayal-damage)
+          target-id)))))
 
 (defn give-money [world amount player-id]
   {:pre [(worlds/world? world)
@@ -100,7 +104,7 @@
     (attack-random-local-enemy world person-id)))
 
 (defn fight-round [world location-id]
-; TODO clean-dead after EACH attack
+  ; TODO clean-dead after EACH attack
   {:pre [(worlds/world? world)]}
   (->> (worlds/get-people-ids-by-speed-at world location-id)
        (reduce attack-random-local-enemy world)

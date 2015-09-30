@@ -35,7 +35,9 @@
     (get-in world [:people person1-id :stats :speed])
     (get-in world [:people person2-id :stats :speed])))
 
-(defn fleeing? [world person-id]
+(defn fleeing?
+  ; HACK: should use a function that works for any combination of agreements.
+  [world person-id]
   {:pre [(world? world)
          (contains? (:people world) person-id)]}
   (let [player-id (get-in world [:people person-id :player-id])
@@ -48,7 +50,9 @@
           (some #(= :flee %) $)
           (some? $))))                                      ; HACK : something's up with these two 'some'
 
-(defn sharing? [world person1-id person2-id]
+(defn sharing?
+  ; HACK: should use a function that works for any combination of agreements.
+  [world person1-id person2-id]
   {:pre [(world? world)
          (= (get-in world [:people person1-id :location-id])
             (get-in world [:people person2-id :location-id]))]}
@@ -62,6 +66,24 @@
           (filter #(util/contains-many? % player1-id player2-id) $)
           (filter #(= :share (get % player1-id)) $)
           (filter #(= :share (get % player2-id)) $)
+          (not (empty? $)))))
+
+(defn betraying?
+  ; HACK: should use a function that works for any combination of agreements.
+  [world betrayer-id victim-id]
+  {:pre [(world? world)
+         (= (get-in world [:people betrayer-id :location-id])
+            (get-in world [:people victim-id :location-id]))]}
+  (let [player-betrayer-id (get-in world [:people betrayer-id :player-id])
+        player-victim-id (get-in world [:people victim-id :player-id])
+        location-id (get-in world [:people betrayer-id :location-id])]
+    (as-> world $
+          (get-in $ [:locations location-id :agreements])
+          (vals $)
+          (map :choices-by-player-id $)
+          (filter #(util/contains-many? % player-betrayer-id player-victim-id) $)
+          (filter #(= :attack (get % player-betrayer-id)) $)
+          (filter #(= :share (get % player-victim-id)) $)
           (not (empty? $)))))
 
 (defn by-speed-decr [world]
@@ -121,6 +143,12 @@
        (keys)
        (filter (partial is-at? world location-id))
        (sort (by-speed-decr world))))
+
+(defn get-betrayal-damage [world attacker-id target-id]
+  {:pre [(world? world)]}
+  (if (betraying? world attacker-id target-id)
+    lib/betrayal-damage
+    0))
 
 ;; HACK: should be in generation.
 (defn add-locations

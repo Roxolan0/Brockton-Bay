@@ -67,10 +67,10 @@ V Bugfixes
 V-- Multiple agreements
 V-- Missing location names in Agreement ask
 
-- Make SHARE/FIGHT/FLEE actually do something
+V Make SHARE/FIGHT/FLEE actually do something
 V-- FLEE round
 V-- SHARE people aren't enemies
---- FIGHT/SHARE combat bonus
+V-- FIGHT/SHARE combat bonus
 V-- SHARE round
 
 - Make speed matter

@@ -9,6 +9,7 @@
 (def nb-turns 3)
 (def nb-fight-rounds 5)
 (def cash-taken-by-fleeing-people 20)
+(def betrayal-damage 2)
 
 ;;; Game defrecords (here to avoid circular dependencies)
 
