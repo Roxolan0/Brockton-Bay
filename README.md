@@ -69,7 +69,7 @@ V-- Missing location names in Agreement ask
 
 - Make SHARE/FIGHT/FLEE actually do something
 V-- FLEE round
---- SHARE people aren't enemies
+V-- SHARE people aren't enemies
 --- FIGHT/SHARE combat bonus
 V-- SHARE round
 

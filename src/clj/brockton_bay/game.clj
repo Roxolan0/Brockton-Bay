@@ -58,7 +58,6 @@
                (max 0 (- damage armour)))))
 
 (defn attack-random-local-enemy
-  ; TODO people on a SHARE/SHARE agreement are NOT enemies
   "Pick a random person from another faction in the same location, and damage them."
   [world person-id]
   {:pre [(worlds/world? world)

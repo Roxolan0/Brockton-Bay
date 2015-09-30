@@ -110,6 +110,8 @@
         #(= (:location-id person) (:location-id (val %))) $)
       (filter
         #(not= (:player-id person) (:player-id (val %))) $)
+      (filter
+        #(not (sharing? world person-id (key %))) $)
       (keys $))))
 
 (defn get-people-ids-by-speed-at [world location-id]
