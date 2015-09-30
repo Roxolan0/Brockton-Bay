@@ -4,31 +4,46 @@
             [brockton-bay.people :as people]
             [brockton-bay.library :as lib]
             [brockton-bay.util :as util]
-            [brockton-bay.locations :as locations]))
+            [brockton-bay.locations :as locations]
+            [brockton-bay.agreements :as agreements]))
 
-(def test-world
-  (as->
-    worlds/empty-world $
-    (util/add-with-id $ [:people] "x" (people/->Person
+(def test-world-with-people
+  (->
+    worlds/empty-world
+    (util/add-with-id [:people] "x" (people/->Person
                                         "Alice"
                                         (lib/->Person-stats 0 1 0 10)
                                         "blue"
                                         "bank"))
-    (util/add-with-id $ [:people] "y" (people/->Person
+    (util/add-with-id [:people] "y" (people/->Person
                                         "Bob"
                                         (lib/->Person-stats 0 1 0 10)
                                         "red"
                                         "bank"))
-    (util/add-with-id $ [:people] "z" (people/->Person
+    (util/add-with-id [:people] "z" (people/->Person
                                         "Carol"
                                         (lib/->Person-stats 0 1 0 10)
                                         "blue"
                                         "bank"))
-    (util/add-with-id $ [:people] "t" (people/->Person
+    (util/add-with-id [:people] "t" (people/->Person
                                         "Dave"
                                         (lib/->Person-stats 0 1 0 10)
                                         "green"
                                         "volcano"))))
+
+(def test-world-with-agreements
+  (->
+    worlds/empty-world
+    (util/add-with-id [:locations] "bank" (locations/->Location nil 0 nil))
+    (util/add-with-id [:locations] "volcano" (locations/->Location nil 0 nil))
+    (util/add-with-id [:locations "bank" :agreements]
+                      (agreements/->Agreement {"red" :flee "blue" :flee}))
+    (util/add-with-id [:locations "volcano" :agreements]
+                      (agreements/->Agreement {"red" :flee "yellow" :flee}))
+    (util/add-with-id [:locations "volcano" :agreements]
+                      (agreements/->Agreement {"blue" :flee "yellow" :flee}))
+    (util/add-with-id [:locations "cemetary" :agreements]
+                      (agreements/->Agreement {"red" :flee "blue" :flee}))))
 
 (facts "About empty-world."
   (fact "It's a World."
@@ -42,26 +57,34 @@
 (facts "About get-people-at-location."
   (fact "Finds all people at the location (and no-one else)."
         (->>
-          (worlds/get-people-at-location test-world "bank")
+          (worlds/get-people-at-location test-world-with-people "bank")
           (keys)
           (flatten))
         => '("x" "y" "z"))
 
   (fact "Find each person only once."
         (->
-          (worlds/get-people-at-location test-world "bank")
+          (worlds/get-people-at-location test-world-with-people "bank")
           (count))
         => 3))
 
 (facts "About get-players-ids-at-location."
   (fact "Finds all players with people at the location (and no-one else)."
         (->
-          (worlds/get-players-ids-at-location test-world "bank")
+          (worlds/get-players-ids-at-location test-world-with-people "bank")
           (flatten))
         => '("blue" "red"))
 
   (fact "Finds each player only once."
         (->
-          (worlds/get-players-ids-at-location test-world "bank")
+          (worlds/get-players-ids-at-location test-world-with-people "bank")
           (count))
         => 2))
+
+(facts "About agreement?."
+  (fact "Returns true if there is an agreement between the two players at that location."
+        (worlds/agreement? test-world-with-agreements "bank" "blue" "red")
+        => true)
+  (fact "Returns false if there isn't an agreement between the two players at that location."
+        (worlds/agreement? test-world-with-agreements "volcano" "blue" "red")
+        => false))
