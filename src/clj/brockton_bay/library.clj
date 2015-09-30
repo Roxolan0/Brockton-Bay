@@ -8,6 +8,7 @@
 (def nb-locations 4)
 (def nb-turns 3)
 (def nb-fight-rounds 5)
+(def cash-taken-by-fleeing-people 20)
 
 ;;; Game defrecords (here to avoid circular dependencies)
 

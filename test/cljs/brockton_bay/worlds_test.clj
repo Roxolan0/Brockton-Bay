@@ -39,15 +39,25 @@
     (util/add-with-id [:locations] "cemetary" (locations/->Location nil 0 {}))
     (util/add-with-id [:locations] "space" (locations/->Location nil 0 {}))
     (util/add-with-id [:locations "bank" :agreements]
-                      (agreements/->Agreement {"red" :flee "blue" :flee}))
+                      (agreements/->Agreement {"red" :flee "blue" :fight}))
     (util/add-with-id [:locations "bank" :agreements]
-                      (agreements/->Agreement {"red" :flee "yellow" :flee}))
+                      (agreements/->Agreement {"red" :fight "yellow" :fight}))
     (util/add-with-id [:locations "volcano" :agreements]
-                      (agreements/->Agreement {"red" :flee "yellow" :flee}))
+                      (agreements/->Agreement {"red" :fight "yellow" :flee}))
     (util/add-with-id [:locations "volcano" :agreements]
                       (agreements/->Agreement {"blue" :flee "yellow" :flee}))
     (util/add-with-id [:locations "cemetary" :agreements]
-                      (agreements/->Agreement {"red" :flee "blue" :flee}))))
+                      (agreements/->Agreement {"red" :flee "blue" :flee}))
+    (util/add-with-id [:people] "x" (people/->Person
+                                      "Alice"
+                                      (lib/->Person-stats 1 1 0 10)
+                                      "red"
+                                      "bank"))
+    (util/add-with-id [:people] "y" (people/->Person
+                                      "Bob"
+                                      (lib/->Person-stats 1 1 0 10)
+                                      "red"
+                                      "volcano"))))
 
 (facts "About empty-world."
   (fact "It's a World."
@@ -94,4 +104,12 @@
         => false)
   (fact "agreement? returns false on a location with no agreements."
         (worlds/agreement? test-world-with-agreements "space" "blue" "red")
+        => false))
+
+(facts "About fleeing?."
+  (fact "fleeing? returns true if that person's player has at least one :flee agreement at that person's location."
+        (worlds/fleeing? test-world-with-agreements "x")
+        => true)
+  (fact "fleeing? returns true if that person's player has no :flee agreement at that person's location."
+        (worlds/fleeing? test-world-with-agreements "y")
         => false))
