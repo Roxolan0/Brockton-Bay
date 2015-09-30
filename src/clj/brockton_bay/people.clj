@@ -4,7 +4,14 @@
   [name
    stats
    player-id
-   location-id])
+   location-id]
+
+  ;Object                                                    ; HACK: get rid of this when there's a proper GUI.
+  ;(toString [this]
+  ;  (pr this))
+  )
+
+
 
 #_(defn random-person-name [name-components]
     {:pre  [(seq name-components)]

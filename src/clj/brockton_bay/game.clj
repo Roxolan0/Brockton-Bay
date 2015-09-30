@@ -88,6 +88,14 @@
     world
     (keys (:people world))))
 
+(defn clear-agreements-at [world location-id]
+  {:pre [(worlds/world? world)]}
+  (assoc-in world [:locations location-id :agreements] nil))
+
+(defn clear-agreements [world]
+  {:pre [(worlds/world? world)]}
+  (reduce clear-agreements-at world (keys (:locations world))))
+
 (defn give-money [world amount player-id]
   {:pre [(worlds/world? world)
          (number? amount)]}

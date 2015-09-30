@@ -5,7 +5,8 @@
            [brockton-bay.worlds :as worlds]
            [brockton-bay.generation :as generation]
            [brockton-bay.util :as util]
-           [brockton-bay.agreements :as agreements]))
+           [brockton-bay.agreements :as agreements]
+           [clojure.string :as str]))
 
 ;;;; TODO: validate all inputs, and get rid of the "Cancel" button.
 
@@ -67,6 +68,31 @@
        (map (partial area-location world))
        (reduce top-bottom-split)))
 
+(defn person->string [world person-id]
+  {:pre [(worlds/world? world)]}
+  (let [person (get-in world [:people person-id])
+        stats (:stats person)
+        player (get-in world [:players (:player-id person)])
+        location (get-in world [:locations (:location-id person)])]
+    (str "[" (:name player) "]"
+         " " (:name person)
+         " (Spd " (:speed stats)
+         "/Dmg " (:damage stats)
+         "/Arm " (:armour stats)
+         "/HP " (:hp stats) ")"
+         " - " (:name location))))
+
+(defn area-people [world]
+  {:pre [(worlds/world? world)]}
+  (->>
+    (get-in world [:people])
+    (keys)
+    (map (partial person->string world))
+    (str/join "\n")
+    (text :multi-line? true :text)
+    (scrollable))
+  )
+
 (defn area-score [world]
   {:pre [(worlds/world? world)]}
   (text :text (str (worlds/get-players-cash world))))
@@ -78,8 +104,10 @@
     (display
       frame
       (top-bottom-split
-        (area-score world)
-        (area-locations world)))
+        (top-bottom-split
+          (area-score world)
+          (area-locations world))
+        (area-people world)))
     (pack! frame)))
 
 ;;; GUI-player interactions
@@ -133,7 +161,8 @@
   {:pre [(worlds/world? world)
          (frame? frame)
          (contains? (:players world) slower-player-id)
-         (contains? (:players world) faster-player-id)]}
+         (contains? (:players world) faster-player-id)
+         (contains? (:locations world) location-id)]}
   (let [slower-choice (ask-agreement world frame location-id
                                      slower-player-id
                                      faster-player-id
@@ -171,7 +200,7 @@
       (worlds/get-players-ids-at-location world location-id) $
       (remove #(= player-id %) $)
       (reduce
-        (fn [a-world a-player-id] (make-agreement a-world frame location-id player-id a-player-id))
+        (fn [a-world a-player-id] (make-agreement a-world frame location-id player-id a-player-id)) ; TODO: should identify the slowest/fastest player.
         world
         $))))
 
@@ -181,6 +210,9 @@
   (as->
     (ask-to-move world frame person-id) $
     (game/change-location world $ person-id)
+    (do
+      (state-of-the-world $ frame)
+      $)
     (make-agreements $ frame person-id)))
 
 (defn distribute-people [world frame]
@@ -211,6 +243,7 @@
         (game/combat-phase $)
         (game/split-payoffs $)
         (game/clear-people-locations $)
+        (game/clear-agreements $)
         )
   )
 
