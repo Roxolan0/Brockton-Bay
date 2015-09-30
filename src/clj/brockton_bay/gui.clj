@@ -36,13 +36,17 @@
    (input frame question :choices options))
   )
 
-(defn ask-with-id [frame question options-map]
+(defn ask-with-id
+  ; HACK : This only works for a very specific map format; may not be flexible enough later on.
+  [frame question options-map key-to-display]
   {:pre [(frame? frame)
          (map? options-map)
          (seq options-map)]}
-  (input frame question :choices options-map)
-  ;; TODO continue work from here
-  )
+  (let [options (map #(zipmap
+                       [:id :to-display]
+                       [(key %) (get (val %) key-to-display)])
+                     options-map)]
+    (:id (input frame question :choices options :to-string :to-display))))
 
 (defn ask-number [frame question]
   {:pre [(frame? frame)]}
@@ -135,10 +139,11 @@
                    " want to put "
                    (:name person)
                    "?")
-        options (keys (:locations world))]                  ; TODO turn into names to ask, and then back
+        options (:locations world)]                  ; TODO turn into names to ask, and then back
     (if (:is-human player)
-      (ask frame question options)
-      (rand-nth options))))
+      (ask-with-id frame question options :name)
+      (rand-nth (keys options))
+      )))
 
 (defn ask-agreement
   "Returns the chosen agreement between the two players."

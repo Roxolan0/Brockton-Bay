@@ -63,18 +63,19 @@ Very early prototype of a superhero management game in Clojure.
 
 
 @Current task list:
-- Fix multiple agreements bug
+V Fix multiple agreements bug
 - Make SHARE/FIGHT/FLEE actually do something
 --- FLEE round
 --- FIGHT/SHARE combat bonus
 --- SHARE round
 - Pretty up the GUI a little
+V-- Show People details
+V-- Show location names
 --- Show agreements
---- Show location names
 --- Scrollable
 --- Get the Ask windows out of the way
 --- Some kind of log, especially for combat
-
+--- More sorting (e.g. in final score)
 V Make the AI be an AI
 V-- Choose location to place character.
 V-- Choose SHARE/FIGHT/FLEE
