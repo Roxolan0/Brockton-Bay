@@ -59,3 +59,15 @@
         (util/add-with-id [:players] "player-2-id" player2))
     => {:players {"player-1-id" player1
                   "player-2-id" player2}}))
+
+(def test-map {:a 0 :b 1 :c 2 :d 3})
+
+(facts "About contains-many?."
+  (fact "contains-many? returns true if all keys are present in the given collection."
+        (util/contains-many? test-map :a :b :c)
+        => true)
+  (fact "contains-many? returns false if one of the keys is missing from the given collection."
+        (util/contains-many? test-map :a :b :missing-key))
+  (fact "contains-many? returns true if no key is required."
+        (util/contains-many? test-map)
+        => true))
