@@ -11,25 +11,25 @@
   (->
     worlds/empty-world
     (util/add-with-id [:people] "x" (people/->Person
-                                        "Alice"
-                                        (lib/->Person-stats 1 1 0 10)
-                                        "blue"
-                                        "bank"))
+                                      "Alice"
+                                      (lib/->Person-stats 1 1 0 10)
+                                      "blue"
+                                      "bank"))
     (util/add-with-id [:people] "y" (people/->Person
-                                        "Bob"
-                                        (lib/->Person-stats 3 1 0 10)
-                                        "red"
-                                        "bank"))
+                                      "Bob"
+                                      (lib/->Person-stats 3 1 0 10)
+                                      "red"
+                                      "bank"))
     (util/add-with-id [:people] "z" (people/->Person
-                                        "Carol"
-                                        (lib/->Person-stats 2 1 0 10)
-                                        "blue"
-                                        "bank"))
+                                      "Carol"
+                                      (lib/->Person-stats 2 1 0 10)
+                                      "blue"
+                                      "bank"))
     (util/add-with-id [:people] "t" (people/->Person
-                                        "Dave"
-                                        (lib/->Person-stats 4 1 0 10)
-                                        "green"
-                                        "volcano"))))
+                                      "Dave"
+                                      (lib/->Person-stats 4 1 0 10)
+                                      "green"
+                                      "volcano"))))
 
 (def test-world-with-agreements
   (->
@@ -39,11 +39,11 @@
     (util/add-with-id [:locations] "cemetary" (locations/->Location nil 0 {}))
     (util/add-with-id [:locations] "space" (locations/->Location nil 0 {}))
     (util/add-with-id [:locations "bank" :agreements]
-                      (agreements/->Agreement {"red" :flee "blue" :fight}))
+                      (agreements/->Agreement {"red" :flee "blue" :share}))
     (util/add-with-id [:locations "bank" :agreements]
-                      (agreements/->Agreement {"red" :fight "yellow" :fight}))
+                      (agreements/->Agreement {"red" :share "yellow" :share}))
     (util/add-with-id [:locations "volcano" :agreements]
-                      (agreements/->Agreement {"red" :fight "yellow" :flee}))
+                      (agreements/->Agreement {"red" :share "yellow" :flee}))
     (util/add-with-id [:locations "volcano" :agreements]
                       (agreements/->Agreement {"blue" :flee "yellow" :flee}))
     (util/add-with-id [:locations "cemetary" :agreements]
@@ -57,7 +57,17 @@
                                       "Bob"
                                       (lib/->Person-stats 1 1 0 10)
                                       "red"
-                                      "volcano"))))
+                                      "volcano"))
+    (util/add-with-id [:people] "z" (people/->Person
+                                      "Carol"
+                                      (lib/->Person-stats 1 1 0 10)
+                                      "yellow"
+                                      "bank"))
+    (util/add-with-id [:people] "t" (people/->Person
+                                      "Dave"
+                                      (lib/->Person-stats 1 1 0 10)
+                                      "blue"
+                                      "bank"))))
 
 (facts "About empty-world."
   (fact "It's a World."
@@ -112,4 +122,12 @@
         => true)
   (fact "fleeing? returns true if that person's player has no :flee agreement at that person's location."
         (worlds/fleeing? test-world-with-agreements "y")
+        => false))
+
+(facts "About sharing?."
+  (fact "sharing? returns true if both players have at least one :share agreement at those people's location."
+        (worlds/sharing? test-world-with-agreements "x" "z")
+        => true)
+  (fact "sharing? returns false if those players don't have a :share agreement at those people's location."
+        (worlds/sharing? test-world-with-agreements "x" "t")
         => false))

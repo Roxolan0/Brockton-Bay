@@ -48,6 +48,22 @@
           (some #(= :flee %) $)
           (some? $))))                                      ; HACK : something's up with these two 'some'
 
+(defn sharing? [world person1-id person2-id]
+  {:pre [(world? world)
+         (= (get-in world [:people person1-id :location-id])
+            (get-in world [:people person2-id :location-id]))]}
+  (let [player1-id (get-in world [:people person1-id :player-id])
+        player2-id (get-in world [:people person2-id :player-id])
+        location-id (get-in world [:people person1-id :location-id])]
+    (as-> world $
+          (get-in $ [:locations location-id :agreements])
+          (vals $)
+          (map :choices-by-player-id $)
+          (filter #(util/contains-many? % player1-id player2-id) $)
+          (filter #(= :share (get % player1-id)) $)
+          (filter #(= :share (get % player2-id)) $)
+          (not (empty? $)))))
+
 (defn by-speed-decr [world]
   {:pre [(world? world)]}
   (comparator (partial higher-speed? world)))

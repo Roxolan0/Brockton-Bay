@@ -112,8 +112,7 @@
   {:pre [(worlds/world? world)]}
   (->> (worlds/get-people-ids-by-speed-at world location-id)
        (reduce attack-or-flee world)
-       (clean-dead)
-       ))
+       (clean-dead)))
 
 (defn fight-step [world location-id]
   {:pre [(worlds/world? world)]}
