@@ -4,12 +4,7 @@
   [name
    stats
    player-id
-   location-id]
-
-  ;Object                                                    ; HACK: get rid of this when there's a proper GUI.
-  ;(toString [this]
-  ;  (pr this))
-  )
+   location-id])
 
 
 
