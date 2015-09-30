@@ -62,7 +62,21 @@ Very early prototype of a superhero management game in Clojure.
 - Richest person wins.
 
 
-
+@Current task list:
+- Fix multiple agreements bug
+- Make SHARE/FIGHT/FLEE actually do something
+--- FLEE round
+--- FIGHT/SHARE combat bonus
+--- SHARE round
+- Pretty up the GUI a little
+--- Show agreements
+--- Show location names
+--- Scrollable
+--- Get the Ask windows out of the way
+--- Some kind of log, especially for combat
+- Make the AI be an AI
+--- Choose location to place character.
+--- Choose SHARE/FIGHT/FLEE
 
 {OLD}
 @Plays-itself main game loop
