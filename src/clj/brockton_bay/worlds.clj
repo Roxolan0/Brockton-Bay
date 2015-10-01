@@ -166,21 +166,3 @@
   (if (betraying? world attacker-id target-id)
     lib/betrayal-damage
     0))
-
-;; HACK: should be in generation.
-(defn add-locations
-  "Pick some random locations from library and add them to the world."
-  [world nb-locations]
-  {:pre [(world? world)
-         (number? nb-locations)]}
-  (->> lib/location-names
-       (shuffle)
-       (take nb-locations)
-       (reduce #(util/add-with-id %1 [:locations] (locations/->Location %2 0 {})) world)))
-
-#_(defn add-agreement [world location-id player1-id player2-id content]
-    {:pre [(world? world)]}
-    (util/add-with-id
-      world
-      [:locations location-id :agreements]
-      (agreements/->Agreement [player1-id player2-id] content)))

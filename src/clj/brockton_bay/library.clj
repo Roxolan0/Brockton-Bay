@@ -4,11 +4,13 @@
 
 (def people-per-player 6)
 (def starting-cash 0)
-(def nb-locations 4)
 (def nb-turns 3)
 (def nb-fight-rounds 5)
 (def cash-taken-by-fleeing-people 20)
 (def betrayal-damage 2)
+
+(defn nb-locations [nb-players] (+ 1 nb-players))
+
 
 ;;; Game defrecords (here to avoid circular dependencies)
 
@@ -24,7 +26,16 @@
   ["Drug trade"
    "Bank robbery"
    "Mercenary work"
-   "Kidnapping"])
+   "Kidnapping"
+   "Train job"
+   "Honest work"
+   "Crystal harvest"
+   "Prison break"
+   "Bodyguarding"
+   "Black market"
+   "Close-range hacking"
+   "Publicity stunt"
+   "Assassination"])
 
 (def ai-names
   ["The Azian Bad Boys"

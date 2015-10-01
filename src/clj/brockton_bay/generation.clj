@@ -3,27 +3,35 @@
             [brockton-bay.players :as players]
             [brockton-bay.util :as util]
             [brockton-bay.library :as lib]
-            [brockton-bay.people :as people]))
+            [brockton-bay.people :as people]
+            [brockton-bay.locations :as locations]))
 
 (defn add-ai-players
+  ; HACK: break in two or three.
   [world cash nb-ais]
   {:pre [(worlds/world? world)
          (number? nb-ais)
          (<= nb-ais (count lib/ai-names))]}
   (let [names (take nb-ais (shuffle lib/ai-names))]
     (reduce (fn [a-world name]
-              (util/add-with-id a-world [:players] (players/->Player name false cash)))
+              (util/add-with-id a-world [:players]
+                                (players/->Player
+                                  name
+                                  false
+                                  cash)))
             world
             names)))
 
 (defn add-human-players [world human-names]
+  ; HACK: break in two.
   {:pre [(worlds/world? world)]}
   (reduce
     (fn [a-world player-name]
-      (util/add-with-id a-world [:players] (players/->Player
-                                             player-name
-                                             true
-                                             lib/starting-cash)))
+      (util/add-with-id a-world [:players]
+                        (players/->Player
+                          player-name
+                          true
+                          lib/starting-cash)))
     world
     human-names))
 
@@ -55,10 +63,30 @@
     world
     (keys (:players world))))
 
+= (defn add-locations
+    ; HACK: break in two or three.
+    "Pick some random locations from library and add them to the world."
+    [world nb-locations]
+    {:pre [(worlds/world? world)
+           (number? nb-locations)
+           (<= nb-locations (count lib/location-names))]}
+    (->> lib/location-names
+         (shuffle)
+         (take nb-locations)
+         (reduce
+           (fn [a-world location-name]
+             (util/add-with-id a-world [:locations]
+                               (locations/->Location
+                                 location-name
+                                 0
+                                 {})))
+           world)))
+
 (defn generate [human-names nb-ais]
   {:pre [(number? nb-ais)]}
-  (-> worlds/empty-world
-      (add-human-players human-names)
-      (add-ai-players lib/starting-cash nb-ais)
-      (add-rand-people-to-everyone lib/people-per-player)
-      (worlds/add-locations lib/nb-locations)))
+  (let [nb-players (+ nb-ais (count human-names))]
+    (-> worlds/empty-world
+        (add-human-players human-names)
+        (add-ai-players lib/starting-cash nb-ais)
+        (add-rand-people-to-everyone lib/people-per-player)
+        (add-locations (lib/nb-locations nb-players)))))
