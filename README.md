@@ -73,9 +73,9 @@ V-- SHARE people aren't enemies
 V-- FIGHT/SHARE combat bonus
 V-- SHARE round
 
-- Make speed matter
---- In the FLEE round
---- In the FIGHT round
+V Make speed matter
+V-- In the FLEE round
+V-- In the FIGHT round
 
 - Pretty up the GUI a little
 V-- Show People details
@@ -84,7 +84,8 @@ V-- Show location names
 --- Scrollable
 --- Get the Ask windows out of the way
 --- Some kind of log, especially for combat
---- More sorting (in the big People list, in final score)
+V-- Sorting of the big People list
+--- Sorting of the final score
 --- Move People to the Location area when they're placed their.
 
 V Make the AI be an AI

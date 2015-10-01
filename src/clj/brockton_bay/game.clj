@@ -57,21 +57,24 @@
                -
                (max 0 (- damage armour)))))
 
+(defn attack [world attacker-id victim-id]
+  (let [damage (get-in world [:people attacker-id :stats :damage])
+        betrayal-damage (worlds/get-betrayal-damage world attacker-id victim-id)]
+    (inflict
+      world
+      (+ damage betrayal-damage)
+      victim-id)))
+
 (defn attack-random-local-enemy
   "Pick a random person from another faction in the same location, and damage them."
   [world person-id]
-  {:pre [(worlds/world? world)
-         (contains? (:people world) person-id)]}
-  (let [local-enemies-ids (worlds/get-local-enemies-ids world person-id)]
-    (if (zero? (count local-enemies-ids))
-      world
-      (let [damage (get-in world [:people person-id :stats :damage])
-            target-id (rand-nth local-enemies-ids)
-            betrayal-damage (worlds/get-betrayal-damage world person-id target-id)]
-        (inflict
-          world
-          (+ damage betrayal-damage)
-          target-id)))))
+  {:pre [(worlds/world? world)]}
+  (if (contains? (:people world) person-id)
+    (let [local-enemies-ids (worlds/get-local-enemies-ids world person-id)]
+      (if (zero? (count local-enemies-ids))
+        world
+        (attack world person-id (rand-nth local-enemies-ids))))
+    world))
 
 (defn give-money [world amount player-id]
   {:pre [(worlds/world? world)
@@ -104,18 +107,14 @@
     (attack-random-local-enemy world person-id)))
 
 (defn fight-round [world location-id]
-  ; TODO clean-dead after EACH attack
   {:pre [(worlds/world? world)]}
   (->> (worlds/get-people-ids-by-speed world location-id)
-       (reduce attack-random-local-enemy world)
-       (clean-dead)))
+       (reduce #(clean-dead (attack-random-local-enemy %1 %2)) world)))
 
 (defn flee-step [world location-id]
-  ; TODO clean-dead after EACH attack
   {:pre [(worlds/world? world)]}
   (->> (worlds/get-people-ids-by-speed world location-id)
-       (reduce attack-or-flee world)
-       (clean-dead)))
+       (reduce #(clean-dead (attack-or-flee %1 %2)) world)))
 
 (defn fight-step [world location-id]
   {:pre [(worlds/world? world)]}
