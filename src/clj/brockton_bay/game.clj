@@ -31,7 +31,7 @@
    (change-location world nil person-id))
   ([world]
    {:pre [(worlds/world? world)]}
-   (reduce clear-locations world (keys (:people world)))))
+   (reduce clear-locations world (worlds/get-people-ids world))))
 
 (defn clear-agreements
   ([world location-id]
@@ -81,22 +81,23 @@
       world
       (attack world person-id (rand-nth local-enemies-ids)))))
 
-(defn give-money [world amount player-id]
+(defn add-money [world amount player-id]
   {:pre [(worlds/world? world)
          (number? amount)]}
   (update-in world [:players player-id :cash] + amount))
 
-(defn give-money-via-person [world amount person-id]
+(defn add-money-via
+  [world amount person-id]
   {:pre [(worlds/world? world)
          (number? amount)]}
-  (give-money world amount (get-in world [:people person-id :player-id])))
+  (add-money world amount (get-in world [:people person-id :player-id])))
 
 (defn grab-local-money [world amount person-id]
   {:pre [(worlds/world? world)]}
   (let [location-id (get-in world [:people person-id :location-id])
         actual-amount (min amount (get-in world [:locations location-id :payoff]))]
     (-> world
-        (give-money-via-person actual-amount person-id)
+        (add-money-via actual-amount person-id)
         (update-in [:locations location-id :payoff] - actual-amount))))
 
 (defn flee [world person-id]
@@ -111,25 +112,23 @@
     (flee world person-id)
     (attack-random-local-enemy world person-id)))
 
-(defn fight-round [world location-id]
-  {:pre [(worlds/world? world)]}
-  (->> (worlds/get-people-ids-by-speed world location-id)   ; HACK: overly similar to flee-step (DRY)
-       (reduce
-         (fn [a-world person-id]
-           (if (contains? (:people a-world) person-id)
-             (attack-random-local-enemy a-world person-id)
-             world))
-         world)))
-
-(defn flee-step [world location-id]
+(defn do-by-speed [world location-id f]
   {:pre [(worlds/world? world)]}
   (->> (worlds/get-people-ids-by-speed world location-id)
        (reduce
          (fn [a-world person-id]
            (if (contains? (:people a-world) person-id)
-             (attack-or-flee a-world person-id)
+             (f a-world person-id)
              world))
          world)))
+
+(defn fight-round [world location-id]
+  {:pre [(worlds/world? world)]}
+  (do-by-speed world location-id attack-random-local-enemy))
+
+(defn flee-step [world location-id]
+  {:pre [(worlds/world? world)]}
+  (do-by-speed world location-id attack-or-flee))
 
 (defn fight-step [world location-id]
   {:pre [(worlds/world? world)]}
@@ -139,9 +138,12 @@
 (defn share-step
   [world location-id]
   {:pre [(worlds/world? world)]}
-  (let [local-people-ids (keys (worlds/get-people-at world location-id))]
+  (let [local-people-ids (worlds/get-people-ids world location-id)]
     (if (zero? (count local-people-ids))
       world
       (let [payoff (get-in world [:locations location-id :payoff])
             share (int (/ payoff (count local-people-ids)))]
-        (reduce #(grab-local-money %1 share %2) world local-people-ids)))))
+        (reduce (fn [a-world person-id]
+                  (grab-local-money a-world share person-id))
+                world
+                local-people-ids)))))

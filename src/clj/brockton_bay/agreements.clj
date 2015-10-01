@@ -10,4 +10,4 @@
     (case other-player-choice
       :share [:share :fight :flee]
       :fight [:fight :flee]
-      :flee [:fight :flee])))
+      :flee [:fight])))

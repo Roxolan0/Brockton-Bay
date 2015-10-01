@@ -52,7 +52,7 @@
   (fact "Removes dead people and no-one else."
         (as->
           worlds/empty-world $
-          (generation/add-templates $ 5 "Bob")
+          (generation/add-rand-people $ 5 "Bob")
           (assoc-in $ [:people (first (keys (:people $))) :stats :hp] 0)
           (assoc-in $ [:people (last (keys (:people $))) :stats :hp] 0)
           (game/clear-deads $)

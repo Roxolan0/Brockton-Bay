@@ -120,7 +120,9 @@
     (map :player-id)
     (distinct)))
 
-(defn get-local-enemies-ids [world person-id]
+(defn get-local-enemies-ids
+  ; HACK: can be done cleaner, and using get-people-ids
+  [world person-id]
   {:pre [(world? world)
          (contains? (:people world) person-id)]}
   (let [person (get-in world [:people person-id])]
@@ -135,20 +137,29 @@
         #(not (sharing? world person-id (key %))) $)
       (keys $))))
 
+(defn get-people-ids
+  ([world]
+   {:pre [(world? world)]}
+   (-> world
+        (:people)
+        (keys)))
+  ([world location-id]
+   {:pre [(world? world)]}
+   (filter
+     (partial is-at? world location-id)
+     (get-people-ids world))))
+
 (defn get-people-ids-by-speed
   ([world]
    {:pre [(world? world)]}
-   (->> world
-        (:people)
-        (keys)
-        (sort (by-speed-decr world))))
+   (sort
+     (by-speed-decr world)
+     (get-people-ids world)))
   ([world location-id]
    {:pre [(world? world)]}
-   (->> world
-        (:people)
-        (keys)
-        (filter (partial is-at? world location-id))
-        (sort (by-speed-decr world)))))
+   (sort
+     (by-speed-decr world)
+     (get-people-ids world location-id))))
 
 (defn get-betrayal-damage [world attacker-id target-id]
   {:pre [(world? world)]}
