@@ -1,8 +1,7 @@
 (ns brockton-bay.worlds
   (:require [brockton-bay.util :as util]
             [brockton-bay.library :as lib]
-            [brockton-bay.locations :as locations]
-            [brockton-bay.agreements :as agreements]))
+            [brockton-bay.locations :as locations]))
 
 (defrecord World
   [players
@@ -107,11 +106,11 @@
   {:pre [(world? world)]}
   (get-people-at world nil))
 
-(defn get-dying-people [world]
+(defn get-dying-people-ids [world]
   {:pre [(world? world)]}
-  (filter
-    #(>= 0 (get-in (val %) [:stats :hp]))
-    (:people world)))
+  (keys (filter
+          #(>= 0 (get-in (val %) [:stats :hp]))
+          (:people world))))
 
 (defn get-players-ids-at [world location-id]
   {:pre [(world? world)]}

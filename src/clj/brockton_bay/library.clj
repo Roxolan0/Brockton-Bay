@@ -1,5 +1,4 @@
-(ns brockton-bay.library
-  (:import (java.util UUID)))
+(ns brockton-bay.library)
 
 ;;; Game constants
 
@@ -40,17 +39,6 @@
    "The Fallen"
    "The Teeth"
    "The Adepts"])
-
-(def person-name-components
-  ["angel" "demon" "beast" "monster"
-   "fire" "ice"
-   "arrow" "knife" "rainbow"
-   "eye" "muscle" "skull" "bone" "blood"
-   "death" "power"
-   "dark" "light"
-   "twilight" "dawn"
-   "wise" "strong" "cold"
-   "killer" "hunter" "stomper"])
 
 (def people-templates
   (zipmap

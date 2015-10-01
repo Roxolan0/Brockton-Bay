@@ -277,7 +277,7 @@
             $)
         (distribute-people $ frame)
         (battle-phase $)
-        (game/clear-location-of-all $)
+        (game/clear-locations $)
         (game/clear-agreements $)
         )
   )

@@ -7,6 +7,29 @@
             [brockton-bay.people :as people]
             [brockton-bay.library :as lib]))
 
+(def test-world-for-combat
+  (-> worlds/empty-world
+      (util/add-with-id [:people] "attacker" (people/->Person
+                                               nil
+                                               (lib/->Person-stats 0 4 0 10)
+                                               nil
+                                               nil))
+      (util/add-with-id [:people] "naked" (people/->Person
+                                            nil
+                                            (lib/->Person-stats 0 0 0 10)
+                                            nil
+                                            nil))
+      (util/add-with-id [:people] "armoured" (people/->Person
+                                             nil
+                                             (lib/->Person-stats 0 0 3 10)
+                                             nil
+                                             nil))
+      (util/add-with-id [:people] "well-armoured" (people/->Person
+                                           nil
+                                           (lib/->Person-stats 0 0 10 10)
+                                           nil
+                                           nil))))
+
 (facts "random-payoff"
   (fact "Returns a positive number."
         (pos? (game/random-payoff 1))
@@ -32,47 +55,25 @@
           (generation/add-templates $ 5 "Bob")
           (assoc-in $ [:people (first (keys (:people $))) :stats :hp] 0)
           (assoc-in $ [:people (last (keys (:people $))) :stats :hp] 0)
-          (game/clean-dead $)
+          (game/clear-deads $)
           (:people $)
           (count $)
           )
         => 3))
 
-(facts "inflict"
-  (fact "Lowers HP of the unarmoured."
-        (as->
-          worlds/empty-world $
-          (util/add-with-id $ [:people] "x" (people/->Person
-                                              nil
-                                              (lib/->Person-stats 0 0 0 10)
-                                              nil
-                                              nil))
-          (game/inflict $ 4 "x")
-          (get-in $ [:people "x" :stats :hp]))
+(facts "About attack."
+  (fact "attack lowers HP of the unarmoured."
+        (-> (game/attack test-world-for-combat "attacker" "naked")
+            (get-in [:people "naked" :stats :hp]))
         => 6)
-  (fact "Partly lowers HP of the armoured."
-        (as->
-          worlds/empty-world $
-          (util/add-with-id $ [:people] "x" (people/->Person
-                                              nil
-                                              (lib/->Person-stats 0 0 3 10)
-                                              nil
-                                              nil))
-          (game/inflict $ 4 "x")
-          (get-in $ [:people "x" :stats :hp]))
+  (fact "attack partly lowers HP of the armoured."
+        (-> (game/attack test-world-for-combat "attacker" "armoured")
+            (get-in [:people "armoured" :stats :hp]))
         => 9)
-  (fact "Doesn't change HP of the well-armoured."
-        (as->
-          worlds/empty-world $
-          (util/add-with-id $ [:people] "x" (people/->Person
-                                              nil
-                                              (lib/->Person-stats 0 0 10 10)
-                                              nil
-                                              nil))
-          (game/inflict $ 4 "x")
-          (get-in $ [:people "x" :stats :hp]))
-        => 10)
-  )
+  (fact "attack doesn't change HP of the well-armoured."
+        (-> (game/attack test-world-for-combat "attacker" "well-armoured")
+            (get-in [:people "well-armoured" :stats :hp]))
+        => 10))
 
 (facts "attack-random-local-enemy"
   (fact "Attacks the enemy in the same location (and no-one else)."
@@ -104,43 +105,3 @@
           (map :stats $)
           (map :hp $))
         => '(10 9 10 10)))
-
-;(facts "combat-turn"
-;  (fact "placeholder"
-;        (identity 1)
-;        => 1))
-;
-;(facts "combat-phase"
-;  (fact "placeholder"
-;        (identity 1)
-;        => 1))
-;
-;(facts "change-location"
-;  (fact "placeholder"
-;        (identity 1)
-;        => 1))
-;
-;(facts "clear-people-locations"
-;  (fact "placeholder"
-;        (identity 1)
-;        => 1))
-;
-;(facts "give-money"
-;  (fact "placeholder"
-;        (identity 1)
-;        => 1))
-;
-;(facts "give-money-via-person"
-;  (fact "placeholder"
-;        (identity 1)
-;        => 1))
-;
-;(facts "split-payoff"
-;  (fact "placeholder"
-;        (identity 1)
-;        => 1))
-;
-;(facts "split-payoffs"
-;  (fact "placeholder"
-;        (identity 1)
-;        => 1))

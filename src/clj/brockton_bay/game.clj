@@ -14,7 +14,10 @@
   {:pre  [(worlds/world? world)]
    :post [(worlds/world? %)]}
   (reduce
-    #(assoc-in %1 [:locations %2 :payoff] (random-payoff (:turn-count world))) ; HACK: use fn with argument names
+    (fn [a-world location-id]
+      (assoc-in a-world
+                [:locations location-id :payoff]
+                (random-payoff (:turn-count world))))
     world
     (keys (:locations world))))
 
@@ -22,59 +25,61 @@
   {:pre [(worlds/world? world)]}
   (assoc-in world [:people person-id :location-id] destination-id))
 
-(defn clear-location-of [world person-id]
-  {:pre [(worlds/world? world)]}
-  (change-location world nil person-id))
+(defn clear-locations
+  ([world person-id]
+   {:pre [(worlds/world? world)]}
+   (change-location world nil person-id))
+  ([world]
+   {:pre [(worlds/world? world)]}
+   (reduce clear-locations world (keys (:people world)))))
 
-(defn clear-location-of-all [world]
-  {:pre [(worlds/world? world)]}
-  (reduce clear-location-of world (keys (:people world))))
+(defn clear-agreements
+  ([world location-id]
+   {:pre [(worlds/world? world)]}
+   (assoc-in world [:locations location-id :agreements] {}))
+  ([world]
+   {:pre [(worlds/world? world)]}
+   (reduce clear-agreements world (keys (:locations world)))))
 
-(defn clear-agreements-at [world location-id]
+(defn clear-person [world person-id]
   {:pre [(worlds/world? world)]}
-  (assoc-in world [:locations location-id :agreements] {}))
+  (util/dissoc-in world [:people person-id]))
 
-(defn clear-agreements [world]
+(defn clear-deads [world]
   {:pre [(worlds/world? world)]}
-  (reduce clear-agreements-at world (keys (:locations world))))
+  (reduce clear-person world (worlds/get-dying-people-ids world)))
 
-(defn clean-dead [world]
+(defn calculate-damage [world attacker-id victim-id]
   {:pre [(worlds/world? world)]}
-  (->> (worlds/get-dying-people world)
-       (keys)
-       (reduce
-         (fn [world person-id] (util/dissoc-in world [:people person-id]))
-         world
-         )))
+  (let [base-damage (get-in world [:people attacker-id :stats :damage])
+        betrayal-damage (worlds/get-betrayal-damage world attacker-id victim-id)
+        armour (get-in world [:people victim-id :stats :armour])]
+    (-> base-damage
+        (+ betrayal-damage)
+        (- armour)
+        (max 0))))
 
 (defn inflict [world damage victim-id]
   {:pre [(worlds/world? world)
-         (number? damage)
-         (contains? (:people world) victim-id)]}
-  (let [armour (get-in world [:people victim-id :stats :armour])]
-    (update-in world
-               [:people victim-id :stats :hp]
-               -
-               (max 0 (- damage armour)))))
+         (number? damage)]}
+  (-> world
+      (update-in [:people victim-id :stats :hp] - damage)
+      (clear-deads)))
 
 (defn attack [world attacker-id victim-id]
-  (let [damage (get-in world [:people attacker-id :stats :damage])
-        betrayal-damage (worlds/get-betrayal-damage world attacker-id victim-id)]
-    (inflict
-      world
-      (+ damage betrayal-damage)
-      victim-id)))
+  {:pre [(worlds/world? world)
+         (contains? (:people world) victim-id)]}
+  (inflict world (calculate-damage world attacker-id victim-id) victim-id))
 
 (defn attack-random-local-enemy
   "Pick a random person from another faction in the same location, and damage them."
   [world person-id]
-  {:pre [(worlds/world? world)]}
-  (if (contains? (:people world) person-id)
-    (let [local-enemies-ids (worlds/get-local-enemies-ids world person-id)]
-      (if (zero? (count local-enemies-ids))
-        world
-        (attack world person-id (rand-nth local-enemies-ids))))
-    world))
+  {:pre [(worlds/world? world)
+         (contains? (:people world) person-id)]}
+  (let [local-enemies-ids (worlds/get-local-enemies-ids world person-id)]
+    (if (zero? (count local-enemies-ids))
+      world
+      (attack world person-id (rand-nth local-enemies-ids)))))
 
 (defn give-money [world amount player-id]
   {:pre [(worlds/world? world)
@@ -98,7 +103,7 @@
   {:pre [(worlds/world? world)]}
   (-> world
       (grab-local-money lib/cash-taken-by-fleeing-people person-id)
-      (clear-location-of person-id)))
+      (clear-locations person-id)))
 
 (defn attack-or-flee [world person-id]
   {:pre [(worlds/world? world)]}
@@ -108,13 +113,23 @@
 
 (defn fight-round [world location-id]
   {:pre [(worlds/world? world)]}
-  (->> (worlds/get-people-ids-by-speed world location-id)
-       (reduce #(clean-dead (attack-random-local-enemy %1 %2)) world)))
+  (->> (worlds/get-people-ids-by-speed world location-id)   ; HACK: overly similar to flee-step (DRY)
+       (reduce
+         (fn [a-world person-id]
+           (if (contains? (:people a-world) person-id)
+             (attack-random-local-enemy a-world person-id)
+             world))
+         world)))
 
 (defn flee-step [world location-id]
   {:pre [(worlds/world? world)]}
   (->> (worlds/get-people-ids-by-speed world location-id)
-       (reduce #(clean-dead (attack-or-flee %1 %2)) world)))
+       (reduce
+         (fn [a-world person-id]
+           (if (contains? (:people a-world) person-id)
+             (attack-or-flee a-world person-id)
+             world))
+         world)))
 
 (defn fight-step [world location-id]
   {:pre [(worlds/world? world)]}
