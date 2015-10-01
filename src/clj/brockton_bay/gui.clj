@@ -142,7 +142,17 @@
         options (:locations world)]                  ; TODO turn into names to ask, and then back
     (if (:is-human player)
       (ask-with-id frame question options :name)
-      (rand-nth (keys options))
+      (let [location-id (rand-nth (keys options))
+            location (get-in world [:locations location-id])
+            alert-text (str
+                         (:name player)
+                         " has chosen to put "
+                         (:name person)
+                         " in "
+                         (:name location)
+                         ".")]
+        (alert alert-text)
+        location-id)
       )))
 
 (defn ask-agreement
@@ -162,7 +172,19 @@
                    "?")]
     (if (:is-human asked-player)
       (ask frame question options)
-      (rand-nth options))))
+      (let [agreement (rand-nth options)
+            alert-text (str
+                         "At "
+                         (:name location)
+                         ", "
+                         (:name asked-player)
+                         " has chosen to "
+                         agreement
+                         " with/from "
+                         (:name other-player)
+                         ".")]
+        (alert alert-text)
+        agreement))))
 
 (defn ask-agreement-from-both
   "Asks the slower player, then the faster player, what agreement they want, and returns the resulting agreement."
