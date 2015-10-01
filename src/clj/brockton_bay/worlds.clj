@@ -136,13 +136,20 @@
         #(not (sharing? world person-id (key %))) $)
       (keys $))))
 
-(defn get-people-ids-by-speed-at [world location-id]
-  {:pre [(world? world)]}
-  (->> world
-       (:people)
-       (keys)
-       (filter (partial is-at? world location-id))
-       (sort (by-speed-decr world))))
+(defn get-people-ids-by-speed
+  ([world]
+   {:pre [(world? world)]}
+   (->> world
+        (:people)
+        (keys)
+        (sort (by-speed-decr world))))
+  ([world location-id]
+   {:pre [(world? world)]}
+   (->> world
+        (:people)
+        (keys)
+        (filter (partial is-at? world location-id))
+        (sort (by-speed-decr world)))))
 
 (defn get-betrayal-damage [world attacker-id target-id]
   {:pre [(world? world)]}

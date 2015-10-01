@@ -106,14 +106,14 @@
 (defn fight-round [world location-id]
   ; TODO clean-dead after EACH attack
   {:pre [(worlds/world? world)]}
-  (->> (worlds/get-people-ids-by-speed-at world location-id)
+  (->> (worlds/get-people-ids-by-speed world location-id)
        (reduce attack-random-local-enemy world)
        (clean-dead)))
 
 (defn flee-step [world location-id]
   ; TODO clean-dead after EACH attack
   {:pre [(worlds/world? world)]}
-  (->> (worlds/get-people-ids-by-speed-at world location-id)
+  (->> (worlds/get-people-ids-by-speed world location-id)
        (reduce attack-or-flee world)
        (clean-dead)))
 

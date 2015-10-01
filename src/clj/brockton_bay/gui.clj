@@ -89,8 +89,7 @@
 (defn area-people [world]
   {:pre [(worlds/world? world)]}
   (->>
-    (get-in world [:people])
-    (keys)
+    (worlds/get-people-ids-by-speed world)
     (map (partial person->string world))
     (str/join "\n")
     (text :multi-line? true :text)
