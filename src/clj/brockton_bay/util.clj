@@ -54,3 +54,10 @@
   "Returns true if all keys are present in the given collection, otherwise returns false."
   [col & keys]
   (every? true? (map #(contains? col %) keys)))
+
+(defn rand-no-repeat
+  "Returns n random elements taken, without repeat, from col."
+  [n col]
+  {:pre [(number? n)
+         (<= n (count col))]}
+  (take n (shuffle col)))

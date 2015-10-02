@@ -11,12 +11,11 @@
   [cash nb-ais]
   {:pre [(number? nb-ais)
          (<= nb-ais (count lib/ai-names))]}
-  (let [names (take nb-ais (shuffle lib/ai-names))]
-    (map #(players/->Player
-           %
-           false
-           cash)
-         names)))
+  (map #(players/->Player
+         %
+         false
+         cash)
+       (util/rand-no-repeat nb-ais lib/ai-names)))
 
 (defn human-players
   "Generates a human Player for each name."
@@ -64,24 +63,24 @@
     world
     (keys (:players world))))
 
-= (defn add-locations
-    ; HACK: break in two or three.
-    "Picks some random locations from library and add them to the world."
-    [world nb-locations]
-    {:pre [(worlds/world? world)
-           (number? nb-locations)
-           (<= nb-locations (count lib/location-names))]}
-    (->> lib/location-names
-         (shuffle)
-         (take nb-locations)
-         (reduce
-           (fn [a-world location-name]
-             (util/add-with-id a-world [:locations]
-                               (locations/->Location
-                                 location-name
-                                 0
-                                 {})))
-           world)))
+
+
+(defn add-locations
+  ; HACK: break in two or three.
+  "Picks some random locations from library and add them to the world."
+  [world nb-locations]
+  {:pre [(worlds/world? world)
+         (number? nb-locations)
+         (<= nb-locations (count lib/location-names))]}
+  (reduce
+    (fn [a-world location-name]
+      (util/add-with-id a-world [:locations]
+                        (locations/->Location
+                          location-name
+                          0
+                          {})))
+    world
+    (util/rand-no-repeat nb-locations lib/location-names)))
 
 (defn generate [human-names nb-ais]
   {:pre [(number? nb-ais)]}
