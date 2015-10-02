@@ -39,7 +39,10 @@
   (fact "Sets the payoff of every location as a positive number."
         (as->
           worlds/empty-world $
-          (generation/add-locations $ 3)
+          (util/add-many-with-id
+            $
+            [:locations]
+            (generation/rand-locations 3))
           (assoc $ :turn-count 1)
           (game/assign-payoffs $)
           (:locations $)

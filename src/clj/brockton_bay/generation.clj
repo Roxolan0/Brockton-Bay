@@ -26,15 +26,6 @@
          cash)
        names))
 
-(defn add-players
-  "Adds players to the world."
-  [world players]
-  {:pre [(worlds/world? world)]}
-  (reduce (fn [a-world player]
-            (util/add-with-id a-world [:players] player))
-          world
-          players))
-
 (defn rand-person
   "Picks a random stat template from library and generates a Person with it and the player-id."
   [player-id]
@@ -63,30 +54,22 @@
     world
     (keys (:players world))))
 
-
-
-(defn add-locations
-  ; HACK: break in two or three.
-  "Picks some random locations from library and add them to the world."
-  [world nb-locations]
-  {:pre [(worlds/world? world)
-         (number? nb-locations)
+(defn rand-locations
+  "Generates some random Locations."
+  [nb-locations]
+  {:pre [(number? nb-locations)
          (<= nb-locations (count lib/location-names))]}
-  (reduce
-    (fn [a-world location-name]
-      (util/add-with-id a-world [:locations]
-                        (locations/->Location
-                          location-name
-                          0
-                          {})))
-    world
-    (util/rand-no-repeat nb-locations lib/location-names)))
+  (map #(locations/->Location
+         %
+         0
+         {})
+       (util/rand-no-repeat nb-locations lib/location-names)))
 
 (defn generate [human-names nb-ais]
   {:pre [(number? nb-ais)]}
   (let [nb-players (+ nb-ais (count human-names))]
     (-> worlds/empty-world
-        (add-players (human-players lib/starting-cash human-names))
-        (add-players (rand-ai-players lib/starting-cash nb-ais))
+        (util/add-many-with-id [:players] (human-players lib/starting-cash human-names))
+        (util/add-many-with-id [:players]  (rand-ai-players lib/starting-cash nb-ais))
         (add-rand-people-to-everyone lib/people-per-player)
-        (add-locations (lib/nb-locations nb-players)))))
+        (util/add-many-with-id [:locations]  (rand-locations (lib/nb-locations nb-players))))))

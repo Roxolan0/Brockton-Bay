@@ -44,11 +44,26 @@
           source))
 
 (defn add-with-id
-  "Add the source to the destination sub-map, indexed by an id (provided or generated)."
-  ([destination submap-vector id source]
-   (update-in destination submap-vector conj {id source}))
-  ([destination submap-vector source]
-   (add-with-id destination submap-vector (UUID/randomUUID) source)))
+  "Add the to-add to the destination sub-map, indexed by an id (provided or generated)."
+  ([destination submap-vector id to-add]
+   (update-in destination submap-vector conj {id to-add}))
+  ([destination submap-vector to-add]
+   (add-with-id destination submap-vector (UUID/randomUUID) to-add)))
+
+(defn add-many-with-id
+  ; HACK: should be a multimethod combined with add-with-id.
+  ([destination submap-vector ids to-add]
+   (reduce
+     (fn [a-destination pair]
+       (add-with-id a-destination submap-vector (key pair) (val pair)))
+     destination
+     (zipmap ids to-add)))
+  ([destination submap-vector to-add]
+   (reduce
+     (fn [a-destination a-to-add]
+       (add-with-id a-destination submap-vector a-to-add))
+     destination
+     to-add)))
 
 (defn contains-many?
   "Returns true if all keys are present in the given collection, otherwise returns false."
