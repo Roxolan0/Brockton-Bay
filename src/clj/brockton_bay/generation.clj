@@ -6,37 +6,38 @@
             [brockton-bay.people :as people]
             [brockton-bay.locations :as locations]))
 
-(defn add-ai-players
-  ; HACK: break in two or three.
-  [world cash nb-ais]
-  {:pre [(worlds/world? world)
-         (number? nb-ais)
+(defn rand-ai-players
+  "Generates some random AI Players."
+  [cash nb-ais]
+  {:pre [(number? nb-ais)
          (<= nb-ais (count lib/ai-names))]}
   (let [names (take nb-ais (shuffle lib/ai-names))]
-    (reduce (fn [a-world name]
-              (util/add-with-id a-world [:players]
-                                (players/->Player
-                                  name
-                                  false
-                                  cash)))
-            world
-            names)))
+    (map #(players/->Player
+           %
+           false
+           cash)
+         names)))
 
-(defn add-human-players [world human-names]
-  ; HACK: break in two.
+(defn human-players
+  "Generates a human Player for each name."
+  [cash names]
+  (map #(players/->Player
+         %
+         true
+         cash)
+       names))
+
+(defn add-players
+  "Adds players to the world."
+  [world players]
   {:pre [(worlds/world? world)]}
-  (reduce
-    (fn [a-world player-name]
-      (util/add-with-id a-world [:players]
-                        (players/->Player
-                          player-name
-                          true
-                          lib/starting-cash)))
-    world
-    human-names))
+  (reduce (fn [a-world player]
+            (util/add-with-id a-world [:players] player))
+          world
+          players))
 
 (defn rand-person
-  "Pick a random stat template from library and generate a Person with it and the player-id."
+  "Picks a random stat template from library and generates a Person with it and the player-id."
   [player-id]
   (let [template (rand-nth (seq lib/people-templates))]
     (people/->Person
@@ -65,7 +66,7 @@
 
 = (defn add-locations
     ; HACK: break in two or three.
-    "Pick some random locations from library and add them to the world."
+    "Picks some random locations from library and add them to the world."
     [world nb-locations]
     {:pre [(worlds/world? world)
            (number? nb-locations)
@@ -86,7 +87,7 @@
   {:pre [(number? nb-ais)]}
   (let [nb-players (+ nb-ais (count human-names))]
     (-> worlds/empty-world
-        (add-human-players human-names)
-        (add-ai-players lib/starting-cash nb-ais)
+        (add-players (human-players lib/starting-cash human-names))
+        (add-players (rand-ai-players lib/starting-cash nb-ais))
         (add-rand-people-to-everyone lib/people-per-player)
         (add-locations (lib/nb-locations nb-players)))))

@@ -1,5 +1,7 @@
 (ns brockton-bay.agreements)
 
+;;; HACK: the map-in-a-map thing regularly causes bugs and is probably a design mistake.
+
 (defrecord Agreement
   [choices-by-player-id])
 

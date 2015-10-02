@@ -13,6 +13,7 @@
 
 
 ;;; Game defrecords (here to avoid circular dependencies)
+;;; HACK: this excuse doesn't sound right.
 
 (defrecord Person-stats
   [^long speed
