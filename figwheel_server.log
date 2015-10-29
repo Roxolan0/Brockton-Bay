@@ -1,0 +1,165 @@
+Figwheel: focusing on build-ids (app)
+[0mCompiling "resources/public/js/app.js" from ["src/cljs" "env/dev/cljs"]...
+[32mSuccessfully compiled "resources/public/js/app.js" in 0.16 seconds.[0m
+notifying browser that file changed:  resources/public/js/app.js
+notifying browser that file changed:  resources/public/js/out/goog/deps.js
+notifying browser that file changed:  /brockton_bay/core.js
+notifying browser that file changed:  /brockton_bay/main.js
+Figwheel: focusing on build-ids (app)
+[0mCompiling "resources/public/js/app.js" from ["src/cljs" "env/dev/cljs"]...
+[32mSuccessfully compiled "resources/public/js/app.js" in 0.176 seconds.[0m
+notifying browser that file changed:  resources/public/js/app.js
+notifying browser that file changed:  resources/public/js/out/goog/deps.js
+notifying browser that file changed:  /brockton_bay/core.js
+notifying browser that file changed:  /brockton_bay/main.js
+Figwheel: focusing on build-ids (app)
+[0mCompiling "resources/public/js/app.js" from ["src/cljs" "env/dev/cljs"]...
+[32mSuccessfully compiled "resources/public/js/app.js" in 0.13 seconds.[0m
+notifying browser that file changed:  resources/public/js/app.js
+notifying browser that file changed:  resources/public/js/out/goog/deps.js
+notifying browser that file changed:  /brockton_bay/core.js
+notifying browser that file changed:  /brockton_bay/main.js
+Figwheel: focusing on build-ids (app)
+[0mCompiling "resources/public/js/app.js" from ["src/cljs" "env/dev/cljs"]...
+[32mSuccessfully compiled "resources/public/js/app.js" in 0.121 seconds.[0m
+notifying browser that file changed:  resources/public/js/app.js
+notifying browser that file changed:  resources/public/js/out/goog/deps.js
+notifying browser that file changed:  /brockton_bay/main.js
+notifying browser that file changed:  /brockton_bay/core.js
+Figwheel: focusing on build-ids (app)
+[0mCompiling "resources/public/js/app.js" from ["src/cljs" "env/dev/cljs"]...
+[32mSuccessfully compiled "resources/public/js/app.js" in 0.109 seconds.[0m
+notifying browser that file changed:  resources/public/js/app.js
+notifying browser that file changed:  resources/public/js/out/goog/deps.js
+notifying browser that file changed:  /brockton_bay/main.js
+notifying browser that file changed:  /brockton_bay/core.js
+Figwheel: focusing on build-ids (app)
+[0mCompiling "resources/public/js/app.js" from ["src/cljs" "env/dev/cljs"]...
+[32mSuccessfully compiled "resources/public/js/app.js" in 0.115 seconds.[0m
+notifying browser that file changed:  resources/public/js/app.js
+notifying browser that file changed:  resources/public/js/out/goog/deps.js
+notifying browser that file changed:  /brockton_bay/main.js
+notifying browser that file changed:  /brockton_bay/core.js
+[0mCompiling "resources/public/js/app.js" from ["src/cljs" "env/dev/cljs"]...
+[32mSuccessfully compiled "resources/public/js/app.js" in 0.207 seconds.[0m
+notifying browser that file changed:  /brockton_bay/core.js
+[0mCompiling "resources/public/js/app.js" from ["src/cljs" "env/dev/cljs"]...
+[31mCompiling "resources/public/js/app.js" failed.[0m
+clojure.lang.ExceptionInfo: failed compiling file:src/cljs/brockton_bay/core.cljs
+ at clojure.core$ex_info.invoke (core.clj:4593)
+    cljs.compiler$compile_file$fn__3102.invoke (compiler.cljc:1254)
+    cljs.compiler$compile_file.invoke (compiler.cljc:1216)
+    cljs.compiler$compile_root.invoke (compiler.cljc:1291)
+    cljs.closure$compile_dir.invoke (closure.clj:438)
+    cljs.closure$eval3545$fn__3546.invoke (closure.clj:478)
+    cljs.closure$eval3497$fn__3498$G__3488__3505.invoke (closure.clj:383)
+    cljs.closure$eval3558$fn__3559.invoke (closure.clj:492)
+    cljs.closure$eval3497$fn__3498$G__3488__3505.invoke (closure.clj:383)
+    clojurescript_build.core.CompilableSourcePaths/fn (core.clj:20)
+    clojure.lang.PersistentVector.reduce (PersistentVector.java:333)
+    clojure.core$reduce.invoke (core.clj:6518)
+    clojurescript_build.core.CompilableSourcePaths._compile (core.clj:19)
+    cljs.closure$build.invoke (closure.clj:1671)
+    clojurescript_build.core$build_source_paths_STAR_.invoke (core.clj:160)
+    figwheel_sidecar.auto_builder$default_build_options$fn__15729.invoke (auto_builder.clj:61)
+    figwheel_sidecar.auto_builder$insert_figwheel_connect_script$fn__15775.invoke (auto_builder.clj:201)
+    figwheel_sidecar.auto_builder$warning$fn__15726.invoke (auto_builder.clj:57)
+    clojurescript_build.auto$time_build$fn__15529.invoke (auto.clj:56)
+    clojurescript_build.auto$after$fn__15535.invoke (auto.clj:65)
+    clojurescript_build.auto$after$fn__15535.invoke (auto.clj:65)
+    clojurescript_build.auto$error$fn__15538.invoke (auto.clj:72)
+    clojurescript_build.auto$before$fn__15532.invoke (auto.clj:61)
+    clojurescript_build.auto$make_conditional_builder$fn__15550.invoke (auto.clj:104)
+    clojure.core$mapv$fn__6727.invoke (core.clj:6616)
+    clojure.lang.PersistentVector.reduce (PersistentVector.java:333)
+    clojure.core$reduce.invoke (core.clj:6518)
+    clojure.core$mapv.invoke (core.clj:6616)
+    clojurescript_build.auto$autobuild_STAR_$fn__15636$state_machine__9479__auto____15637$fn__15642.invoke (auto.clj:187)
+    clojurescript_build.auto$autobuild_STAR_$fn__15636$state_machine__9479__auto____15637.invoke (auto.clj:178)
+[0mCompiling "resources/public/js/app.js" from ["src/cljs" "env/dev/cljs"]...
+[31mCompiling "resources/public/js/app.js" failed.[0m
+clojure.lang.ExceptionInfo: failed compiling file:src/cljs/brockton_bay/core.cljs
+ at clojure.core$ex_info.invoke (core.clj:4593)
+    cljs.compiler$compile_file$fn__3102.invoke (compiler.cljc:1254)
+    cljs.compiler$compile_file.invoke (compiler.cljc:1216)
+    cljs.compiler$compile_root.invoke (compiler.cljc:1291)
+    cljs.closure$compile_dir.invoke (closure.clj:438)
+    cljs.closure$eval3545$fn__3546.invoke (closure.clj:478)
+    cljs.closure$eval3497$fn__3498$G__3488__3505.invoke (closure.clj:383)
+    cljs.closure$eval3558$fn__3559.invoke (closure.clj:492)
+    cljs.closure$eval3497$fn__3498$G__3488__3505.invoke (closure.clj:383)
+    clojurescript_build.core.CompilableSourcePaths/fn (core.clj:20)
+    clojure.lang.PersistentVector.reduce (PersistentVector.java:333)
+    clojure.core$reduce.invoke (core.clj:6518)
+    clojurescript_build.core.CompilableSourcePaths._compile (core.clj:19)
+    cljs.closure$build.invoke (closure.clj:1671)
+    clojurescript_build.core$build_source_paths_STAR_.invoke (core.clj:160)
+    figwheel_sidecar.auto_builder$default_build_options$fn__15729.invoke (auto_builder.clj:61)
+    figwheel_sidecar.auto_builder$insert_figwheel_connect_script$fn__15775.invoke (auto_builder.clj:201)
+    figwheel_sidecar.auto_builder$warning$fn__15726.invoke (auto_builder.clj:57)
+    clojurescript_build.auto$time_build$fn__15529.invoke (auto.clj:56)
+    clojurescript_build.auto$after$fn__15535.invoke (auto.clj:65)
+    clojurescript_build.auto$after$fn__15535.invoke (auto.clj:65)
+    clojurescript_build.auto$error$fn__15538.invoke (auto.clj:72)
+    clojurescript_build.auto$before$fn__15532.invoke (auto.clj:61)
+    clojurescript_build.auto$make_conditional_builder$fn__15550.invoke (auto.clj:104)
+    clojure.core$mapv$fn__6727.invoke (core.clj:6616)
+    clojure.lang.PersistentVector.reduce (PersistentVector.java:333)
+    clojure.core$reduce.invoke (core.clj:6518)
+    clojure.core$mapv.invoke (core.clj:6616)
+    clojurescript_build.auto$autobuild_STAR_$fn__15636$state_machine__9479__auto____15637$fn__15642.invoke (auto.clj:187)
+    clojurescript_build.auto$autobuild_STAR_$fn__15636$state_machine__9479__auto____15637.invoke (auto.clj:178)
+[0mCompiling "resources/public/js/app.js" from ["src/cljs" "env/dev/cljs"]...
+[31mCompiling "resources/public/js/app.js" failed.[0m
+clojure.lang.ExceptionInfo: failed compiling file:src/cljs/brockton_bay/core.cljs
+ at clojure.core$ex_info.invoke (core.clj:4593)
+    cljs.compiler$compile_file$fn__3102.invoke (compiler.cljc:1254)
+    cljs.compiler$compile_file.invoke (compiler.cljc:1216)
+    cljs.compiler$compile_root.invoke (compiler.cljc:1291)
+    cljs.closure$compile_dir.invoke (closure.clj:438)
+    cljs.closure$eval3545$fn__3546.invoke (closure.clj:478)
+    cljs.closure$eval3497$fn__3498$G__3488__3505.invoke (closure.clj:383)
+    cljs.closure$eval3558$fn__3559.invoke (closure.clj:492)
+    cljs.closure$eval3497$fn__3498$G__3488__3505.invoke (closure.clj:383)
+    clojurescript_build.core.CompilableSourcePaths/fn (core.clj:20)
+    clojure.lang.PersistentVector.reduce (PersistentVector.java:333)
+    clojure.core$reduce.invoke (core.clj:6518)
+    clojurescript_build.core.CompilableSourcePaths._compile (core.clj:19)
+    cljs.closure$build.invoke (closure.clj:1671)
+    clojurescript_build.core$build_source_paths_STAR_.invoke (core.clj:160)
+    figwheel_sidecar.auto_builder$default_build_options$fn__15729.invoke (auto_builder.clj:61)
+    figwheel_sidecar.auto_builder$insert_figwheel_connect_script$fn__15775.invoke (auto_builder.clj:201)
+    figwheel_sidecar.auto_builder$warning$fn__15726.invoke (auto_builder.clj:57)
+    clojurescript_build.auto$time_build$fn__15529.invoke (auto.clj:56)
+    clojurescript_build.auto$after$fn__15535.invoke (auto.clj:65)
+    clojurescript_build.auto$after$fn__15535.invoke (auto.clj:65)
+    clojurescript_build.auto$error$fn__15538.invoke (auto.clj:72)
+    clojurescript_build.auto$before$fn__15532.invoke (auto.clj:61)
+    clojurescript_build.auto$make_conditional_builder$fn__15550.invoke (auto.clj:104)
+    clojure.core$mapv$fn__6727.invoke (core.clj:6616)
+    clojure.lang.PersistentVector.reduce (PersistentVector.java:333)
+    clojure.core$reduce.invoke (core.clj:6518)
+    clojure.core$mapv.invoke (core.clj:6616)
+    clojurescript_build.auto$autobuild_STAR_$fn__15636$state_machine__9479__auto____15637$fn__15642.invoke (auto.clj:187)
+    clojurescript_build.auto$autobuild_STAR_$fn__15636$state_machine__9479__auto____15637.invoke (auto.clj:178)
+Figwheel: focusing on build-ids (app)
+[0mCompiling "resources/public/js/app.js" from ["src/cljs" "env/dev/cljs"]...
+[32mSuccessfully compiled "resources/public/js/app.js" in 0.106 seconds.[0m
+notifying browser that file changed:  resources/public/js/app.js
+notifying browser that file changed:  resources/public/js/out/goog/deps.js
+notifying browser that file changed:  /brockton_bay/main.js
+notifying browser that file changed:  /brockton_bay/core.js
+Figwheel: focusing on build-ids (app)
+[0mCompiling "resources/public/js/app.js" from ["src/cljs" "env/dev/cljs"]...
+[32mSuccessfully compiled "resources/public/js/app.js" in 0.108 seconds.[0m
+notifying browser that file changed:  resources/public/js/app.js
+notifying browser that file changed:  resources/public/js/out/goog/deps.js
+notifying browser that file changed:  /brockton_bay/main.js
+notifying browser that file changed:  /brockton_bay/core.js
+Figwheel: focusing on build-ids (app)
+[0mCompiling "resources/public/js/app.js" from ["src/cljs" "env/dev/cljs"]...
+[32mSuccessfully compiled "resources/public/js/app.js" in 0.106 seconds.[0m
+notifying browser that file changed:  resources/public/js/app.js
+notifying browser that file changed:  resources/public/js/out/goog/deps.js
+notifying browser that file changed:  /brockton_bay/main.js
+notifying browser that file changed:  /brockton_bay/core.js

@@ -1,5 +1,3 @@
-/deploy
-.#*
 /target
 /classes
 /checkouts
@@ -9,6 +7,11 @@ pom.xml.asc
 *.class
 /.lein-*
 /.nrepl-port
+/resources/public/js
+/out
+/.repl
+/deploy
+.#*
 .idea
 *.iml
 default-properties.json
